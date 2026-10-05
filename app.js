@@ -1,5 +1,5 @@
 /*
- * ANZ EiC Elevate — live agenda timeline.
+ * ANZ EIC Elevate — live agenda timeline.
  * Plain JavaScript, no dependencies. Reads window.EVENT_AGENDA from agenda.js.
  */
 (() => {
@@ -263,7 +263,7 @@
   const city = timeZone ? timeZone.split("/").pop().replace(/_/g, " ") : "";
   const eventZone = zoneAt(dayStart);
 
-  document.title = `${isPreview ? "[Preview] " : ""}Agenda · ${config.title || "ANZ EiC Elevate"}`;
+  document.title = `${isPreview ? "[Preview] " : ""}Agenda · ${config.title || "ANZ EIC Elevate"}`;
   setText($("event-date"), fmt.date.format(dayStart));
   if (config.venue) setText($("event-venue"), config.venue);
   else $("event-venue").hidden = true;

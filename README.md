@@ -1,4 +1,4 @@
-# ANZ EiC Elevate: live agenda
+# ANZ EIC Elevate: live agenda
 
 A static, dependency-free agenda site (HTML + CSS + vanilla JS). Sessions are laid out on a timeline. A pointer moves along the timeline to show how far the current session has progressed, and the live session is shown with bigger text.
 

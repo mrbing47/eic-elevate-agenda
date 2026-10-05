@@ -1,5 +1,5 @@
 /*
- * ANZ EiC Elevate — agenda data
+ * ANZ EIC Elevate — agenda data
  * ----------------------------------------------------------------------------
  * This is the only file you need to edit to update the agenda.
  *
@@ -16,7 +16,7 @@
  * Add &speed=60 to run the clock 60x faster.
  */
 window.EVENT_AGENDA = {
-  title: "ANZ EiC Elevate",
+  title: "ANZ EIC Elevate",
   date: "2026-10-05",
   timeZone: "Australia/Sydney",
   locale: "en-AU",
@@ -32,7 +32,7 @@ window.EVENT_AGENDA = {
     {
       start: "09:00", end: "09:20",
       title: "Welcome to Elevate",
-      speaker: "ANZ EiC Leadership Team",
+      speaker: "ANZ EIC Leadership Team",
       location: "Main Stage",
       description: "Kick-off, housekeeping and what to expect from the day."
     },
@@ -79,7 +79,7 @@ window.EVENT_AGENDA = {
     {
       start: "14:15", end: "15:15",
       title: "Build challenge: Ship it with Copilot",
-      speaker: "EiC tech leads",
+      speaker: "EIC tech leads",
       location: "Breakout rooms",
       description: "Team up and build something useful in 60 minutes."
     },
@@ -91,15 +91,15 @@ window.EVENT_AGENDA = {
     },
     {
       start: "15:30", end: "16:15",
-      title: "Lightning talks: EiC showcase",
-      speaker: "EiC community",
+      title: "Lightning talks: EIC showcase",
+      speaker: "EIC community",
       location: "Main Stage",
       description: "Five-minute talks on projects, wins and lessons learned."
     },
     {
       start: "16:15", end: "16:45",
       title: "Awards & closing remarks",
-      speaker: "ANZ EiC Leadership Team",
+      speaker: "ANZ EIC Leadership Team",
       location: "Main Stage"
     },
     {

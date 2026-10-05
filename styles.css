@@ -1,10 +1,10 @@
 @charset "UTF-8";
 /* =============================================================================
-   ANZ EiC Elevate — live agenda
+   ANZ EIC Elevate — live agenda
    ========================================================================== */
 
 :root {
-  /* Brand colours sampled from the ANZ EiC Elevate logo ("EIC" gradient + navy type) */
+  /* Brand colours sampled from the ANZ EIC Elevate logo ("EIC" gradient + navy type) */
   --eic-blue: #0934f1;
   --eic-violet: #610eef;
   --eic-purple: #a103d7;
