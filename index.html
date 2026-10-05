@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agenda · ANZ EiC Elevate</title>
+  <meta name="description" content="Live agenda for ANZ EiC Elevate.">
+  <meta name="theme-color" content="#ffffff">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="hero" id="hero">
+    <div class="container hero-inner">
+      <h1 class="brand">
+        <img class="brand-logo" src="assets/elevate-logo.png" width="986" height="407" alt="ANZ EiC Elevate">
+        <span class="visually-hidden">agenda</span>
+      </h1>
+
+      <div class="hero-meta">
+        <p class="eyebrow">Agenda</p>
+        <p class="event-date" id="event-date"></p>
+        <p class="event-venue" id="event-venue"></p>
+      </div>
+
+      <div class="clock">
+        <p class="clock-label" id="clock-label">Local time</p>
+        <time class="clock-time" id="clock-time">--:--</time>
+        <p class="preview-flag" id="preview-flag" hidden>Preview · simulated time</p>
+      </div>
+    </div>
+  </header>
+
+  <div class="status" id="status">
+    <div class="container status-inner">
+      <span class="status-badge" id="status-badge"></span>
+      <a class="status-title" id="status-title"></a>
+      <span class="status-meta" id="status-meta"></span>
+      <span class="status-next" id="status-next"></span>
+      <time class="status-clock" id="status-clock"></time>
+    </div>
+    <p class="visually-hidden" id="status-announce" aria-live="polite"></p>
+  </div>
+
+  <main class="container">
+    <ol class="timeline" id="timeline" aria-label="Agenda"></ol>
+    <noscript><p class="notice">Turn on JavaScript to see the live agenda.</p></noscript>
+  </main>
+
+  <footer class="footer">
+    <div class="container" id="footer-note"></div>
+  </footer>
+
+  <script src="agenda.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
