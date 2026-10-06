@@ -329,21 +329,19 @@
     return !attached || changed;
   }
 
-  if ("ResizeObserver" in window) {
-    let width = 0;
-    new ResizeObserver(([entry]) => {
-      // Stacking only changes the height, so reacting to width alone can't loop.
-      if (entry.contentRect.width === width) return;
-      width = entry.contentRect.width;
-      fitStatus();
-    }).observe(statusEl);
-  }
-  document.fonts?.addEventListener?.("loadingdone", fitStatus);
+  let statusWidth = 0;
+  new ResizeObserver(([entry]) => {
+    // Stacking only changes the height, so reacting to width alone can't loop.
+    if (entry.contentRect.width === statusWidth) return;
+    statusWidth = entry.contentRect.width;
+    fitStatus();
+  }).observe(statusEl);
+  document.fonts.addEventListener("loadingdone", fitStatus);
 
   // ---------------------------------------------------------------------------
   // Keeping the current session in view
   // ---------------------------------------------------------------------------
-  const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
   let lastInteraction = 0;
   for (const type of ["wheel", "touchstart", "keydown", "mousedown"]) {
     addEventListener(type, () => { lastInteraction = Date.now(); }, { passive: true });
@@ -354,35 +352,43 @@
     const top = Math.max(statusEl.getBoundingClientRect().bottom, 0);
     if (rect.top >= top && rect.bottom <= innerHeight) return;
     el.scrollIntoView({
-      behavior: reduceMotion ? "instant" : "smooth",
+      behavior: reducedMotion.matches ? "instant" : "smooth",
       block: rect.height < (innerHeight - top) * 0.8 ? "center" : "start",
     });
   }
 
   let focusEl; // undefined until the first tick
+  let scrollOwed = false; // focusEl changed but the page hasn't been brought to it yet
+
   function follow(el) {
-    if (el === focusEl) return;
-    const isFirst = focusEl === undefined;
-    focusEl = el;
-    if (!el) return; // nothing to follow before the event day
-    if (isFirst) {
-      if (location.hash) return;
-      (document.fonts?.ready ?? Promise.resolve()).then(() => bringIntoView(el));
-    } else if (Date.now() - lastInteraction > MINUTE) {
-      // Don't yank the page while someone is reading it.
-      bringIntoView(el);
+    if (el !== focusEl) {
+      const isFirst = focusEl === undefined;
+      focusEl = el;
+      scrollOwed = !!el;
+      if (isFirst && el) {
+        if (location.hash) {
+          lastInteraction = Date.now(); // honour a #session link for a minute first
+        } else {
+          scrollOwed = false;
+          document.fonts.ready.then(() => bringIntoView(el));
+        }
+      }
+    }
+    // Don't yank the page while someone is reading it: catch up after a minute idle.
+    if (scrollOwed && Date.now() - lastInteraction > MINUTE) {
+      scrollOwed = false;
+      bringIntoView(focusEl);
     }
   }
 
-  if ("IntersectionObserver" in window) {
-    new IntersectionObserver(
-      ([entry]) => {
-        statusEl.classList.toggle("show-clock", !entry.isIntersecting);
-        fitStatus();
-      },
-      { rootMargin: "-80px 0px 0px 0px" },
-    ).observe(clockEl);
-  }
+  new IntersectionObserver(
+    (entries) => {
+      const entry = entries[entries.length - 1];
+      statusEl.classList.toggle("show-clock", !entry.isIntersecting);
+      fitStatus();
+    },
+    { rootMargin: "-80px 0px 0px 0px" },
+  ).observe(clockEl);
 
   // ---------------------------------------------------------------------------
   // The "now" pointer, rail fill and progress bar advance once a minute. JS sets
@@ -396,7 +402,7 @@
     clamp((Math.floor(t / MINUTE) * MINUTE - start) / Math.max(end - start, 1), 0, 1);
 
   // Layout changes (fonts loading, window resizes) re-place the pointer without a glide.
-  const layoutWatcher = "ResizeObserver" in window ? new ResizeObserver(() => paintMotion(true)) : null;
+  const layoutWatcher = new ResizeObserver(() => paintMotion(true));
 
   // Length of one glide (--glide in styles.css). A new glide waits for the last
   // one to finish, so a fast ?speed preview plays the same full glide, just more
@@ -410,17 +416,17 @@
   let paintedMinute = null;
   let glideStartedAt = -Infinity;
 
-  function paintMotion(instant = false) {
+  function paintMotion(snap = false) {
     const t = now();
     const minute = Math.floor(t / MINUTE);
-    if (!instant) {
+    if (!snap) {
       if (minute === paintedMinute) return; // nothing has moved
       if (performance.now() - glideStartedAt < glideMs) return; // let the current glide finish
       glideStartedAt = performance.now();
     }
     paintedMinute = minute;
     const s = pointerRow;
-    if (instant) timelineEl.classList.add("no-glide");
+    if (snap) timelineEl.classList.add("no-glide");
     if (s) {
       const p = minuteProgress(t, s.startMs, s.segmentEndMs);
       // Read layout first, then write, so updates never force a synchronous reflow.
@@ -435,7 +441,7 @@
       const p = minuteProgress(t, r.startMs, r.endMs);
       r.barEl.style.clipPath = `inset(0 ${(100 - p * 100).toFixed(3)}% 0 0 round 999px)`;
     }
-    if (instant) {
+    if (snap) {
       void timelineEl.offsetHeight; // apply the new positions before re-enabling the glide
       timelineEl.classList.remove("no-glide");
     }
@@ -448,10 +454,10 @@
     if (row !== pointerRow) {
       if (pointerRow) {
         pointerRow.fillEl.style.removeProperty("clip-path");
-        layoutWatcher?.unobserve(pointerRow.trackEl);
+        layoutWatcher.unobserve(pointerRow.trackEl);
       }
       pointerRow = row;
-      if (row) layoutWatcher?.observe(row.trackEl);
+      if (row) layoutWatcher.observe(row.trackEl);
     }
     liveRows = live;
     paintMotion(changed);
@@ -463,7 +469,7 @@
   // with one already running so they all brighten and dim together. Pulses only
   // start when a session or the bar's state changes, so this runs just then.
   function syncPulses() {
-    const pulses = document.getAnimations?.().filter((a) => a.animationName === "live-pulse") ?? [];
+    const pulses = document.getAnimations().filter((a) => a.animationName === "live-pulse");
     const start = pulses.find((a) => a.startTime !== null)?.startTime;
     if (start == null) return; // all just started together this frame
     for (const a of pulses) if (a.startTime !== start) a.startTime = start;
@@ -479,7 +485,6 @@
     const [digits, period] = timeParts(t, fmt.clock);
     setText(clockDigits, digits);
     setText(clockPeriod, period);
-    clockEl.dateTime = new Date(t).toISOString();
     const clockChanged = setText(status.clock, fmt.time.format(t));
 
     let live = null;
@@ -503,8 +508,7 @@
       if (isLive) s.el.setAttribute("aria-current", "time");
       else s.el.removeAttribute("aria-current");
 
-      const railProgress = clamp((t - s.startMs) / Math.max(s.segmentEndMs - s.startMs, 1), 0, 1);
-      s.el.style.setProperty("--p", railProgress.toFixed(4));
+      s.el.classList.toggle("rail-done", t >= s.segmentEndMs);
       if (hasPointer) setText(s.chipEl, fmt.time.format(t));
 
       if (isLive) {
@@ -578,14 +582,26 @@
     follow(beforeEventDay ? null : live ? live.el : next ? next.el : endEl);
   }
 
+  let lastTickError = "";
+  function safeTick() {
+    try {
+      tick();
+      lastTickError = "";
+    } catch (err) {
+      // Log a repeating failure once instead of every second.
+      if (String(err) !== lastTickError) console.error("[agenda] Update failed; will retry.", err);
+      lastTickError = String(err);
+    }
+  }
+
   function loop() {
-    tick();
+    safeTick();
     // Wake just after the next (simulated) second, at most ~20 times a second when fast-forwarding.
     setTimeout(loop, Math.max((1000 - (now() % 1000)) / speed, 50) + 15);
   }
 
   document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) tick();
+    if (!document.hidden) safeTick();
   });
 
   loop();

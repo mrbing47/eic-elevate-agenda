@@ -4,9 +4,13 @@ A static, dependency-free agenda site (HTML + CSS + vanilla JS). Sessions are la
 
 Before the event day, the top bar shows a countdown (e.g. "T−31 days till the event") with the event's date. "Coming up", "Up next" and the live highlights appear from midnight on the event day (in the event's time zone).
 
+If the device's reduce-motion setting is on, the "Now" dots, the pointer's ring and the countdown's glow stand still.
+
 ## Run
 
 Open `index.html` in a browser. No build step or server is needed.
+
+The Inter font is bundled in `assets/fonts/` under the SIL Open Font License (see `assets/fonts/OFL.txt`), so the page makes no external requests.
 
 ## Edit the agenda
 
