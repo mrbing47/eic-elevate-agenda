@@ -26,7 +26,7 @@ Add `?now=` to the URL to see the page as it would look at another time:
 
 - `index.html?now=10:45` – on the event day
 - `index.html?now=2026-11-05T18:00` – any date/time (in the event's time zone)
-- `index.html?now=10:45&speed=60` – also runs the clock 60× faster, so you can watch the pointer move and the sessions change
+- `index.html?now=10:45&speed=60` – also runs the clock 60× faster, so you can watch the pointer move and the sessions change. Only the clock speeds up; the pulses, glows and glides keep their normal pace.
 
 ## Deploy
 

@@ -232,10 +232,8 @@ a {
 }
 
 .status-badge {
-  display: inline-flex;
+  display: inline-block;
   flex: none;
-  align-items: center;
-  gap: 0.45rem;
   padding: 0.35rem 0.75rem;
   border-radius: 999px;
   font-size: 0.72rem;
@@ -243,9 +241,19 @@ a {
   line-height: 1;
   letter-spacing: 0.1em;
   text-transform: uppercase;
+  white-space: nowrap;
   color: var(--eic-violet);
   background: rgb(97 14 239 / 0.08);
   box-shadow: inset 0 0 0 1px rgb(97 14 239 / 0.22);
+}
+
+/* Where supported, trim the line to the capitals so the label sits exactly in
+   the middle of the pill; the padding grows so the pill keeps its height. */
+@supports (text-box: trim-both cap alphabetic) {
+  .status-badge {
+    padding-block: calc(0.35rem + (1lh - 1cap) / 2);
+    text-box: trim-both cap alphabetic;
+  }
 }
 
 .status-badge:empty {
@@ -260,11 +268,21 @@ a {
 
 .status[data-state="live"] .status-badge::before {
   content: "";
+}
+
+/* Live dot (top bar and timeline cards): it sits on the label's baseline,
+   raised by half the capital height minus half its own size, so its centre
+   lines up with the middle of "NOW" at any font size. */
+.badge-dot,
+.status[data-state="live"] .status-badge::before {
+  display: inline-block;
   width: 0.45rem;
   height: 0.45rem;
+  margin-right: 0.45rem;
   border-radius: 50%;
+  vertical-align: calc(0.5cap - 0.225rem);
   background: currentColor;
-  animation: blink 1.6s ease-in-out infinite;
+  animation: live-pulse 2s ease-in-out infinite;
 }
 
 .status-title {
@@ -541,24 +559,29 @@ a {
 .pointer {
   left: 50%;
   z-index: 2;
-  width: 1.3rem;
-  height: 1.3rem;
-  margin: -0.65rem 0 0 -0.65rem;
+  width: 2.2rem;
+  height: 2.2rem;
+  margin: -1.1rem 0 0 -1.1rem;
+  /* The gradient dot is the content box. The white disc around it (the padding)
+     reaches the outer ring, so the rail line stops at the ring instead of
+     showing through inside it. Padding, unlike a border, is never rounded to
+     whole pixels, so the disc and ring always line up. */
+  padding: 0.45rem;
   border-radius: 50%;
-  background: var(--gradient);
-  box-shadow: 0 0 0 4px var(--surface), 0 6px 16px -2px rgb(97 14 239 / 0.55);
+  background: var(--gradient) content-box, var(--surface);
+  box-shadow: 0 6px 16px calc(-2px - 0.45rem) rgb(97 14 239 / 0.55);
   will-change: transform;
 }
 
-/* Outer ring: breathes in and out around the pointer */
+/* Outer ring, on the white disc's edge: fades in and out with the "Now" dots */
 .pointer::after {
   content: "";
   position: absolute;
-  inset: -0.45rem;
+  inset: 0;
   border: 2px solid rgb(97 14 239 / 0.55);
   border-radius: 50%;
   box-shadow: 0 0 10px rgb(97 14 239 / 0.3);
-  animation: pulse 2s ease-in-out infinite;
+  animation: live-pulse 2s ease-in-out infinite;
 }
 
 .now-chip {
@@ -612,16 +635,24 @@ a {
 
 .badge {
   display: none;
-  align-items: center;
-  gap: 0.45rem;
   height: 1.35rem;
   margin-block: calc((var(--line-h) - 1.35rem) / 2);
-  padding: 0 0.65rem;
+  padding: calc((1.35rem - 1em) / 2) 0.65rem;
   border-radius: 999px;
   font-size: 0.68rem;
   font-weight: 700;
+  line-height: 1;
   letter-spacing: 0.1em;
   text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Same capital-height trim as the top bar's pill (see .status-badge) */
+@supports (text-box: trim-both cap alphabetic) {
+  .badge {
+    padding-block: calc((1.35rem - 1cap) / 2);
+    text-box: trim-both cap alphabetic;
+  }
 }
 
 .badge-live {
@@ -637,15 +668,7 @@ a {
 
 .is-live .badge-live,
 .is-next .badge-next {
-  display: inline-flex;
-}
-
-.badge-dot {
-  width: 0.45rem;
-  height: 0.45rem;
-  border-radius: 50%;
-  background: currentColor;
-  animation: blink 1.6s ease-in-out infinite;
+  display: inline-block;
 }
 
 .meta {
@@ -864,36 +887,15 @@ a {
 /* -----------------------------------------------------------------------------
    Motion
    -------------------------------------------------------------------------- */
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.35;
-    transform: scale(1.4);
-  }
-}
-
-/* Reduced-motion version of the pulse: brightens and dims without growing */
-@keyframes pulse-fade {
+/* "Now" dots and the pointer's outer ring: a soft fade in and out, like a news
+   site's "live" indicator */
+@keyframes live-pulse {
   0%,
   100% {
     opacity: 1;
   }
   50% {
-    opacity: 0.3;
-  }
-}
-
-@keyframes blink {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.35;
+    opacity: 0.5;
   }
 }
 
@@ -911,19 +913,9 @@ a {
   }
 }
 
-/* Reduced motion: the pointer's ring fades instead of growing and the blinking
-   dots stop. Short state transitions, the once-a-minute glide and the
-   countdown's slow orbiting glow stay. */
-@media (prefers-reduced-motion: reduce) {
-  .pointer::after {
-    animation-name: pulse-fade;
-  }
-
-  .badge-dot,
-  .status[data-state="live"] .status-badge::before {
-    animation: none;
-  }
-}
+/* Reduced motion needs no overrides: the looping effects are soft fades (the
+   "Now" dots and pointer ring) or small and slow (the countdown's orbiting
+   glow), and the once-a-minute glide shows time passing. */
 
 /* -----------------------------------------------------------------------------
    Responsive

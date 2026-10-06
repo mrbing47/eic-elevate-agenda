@@ -173,7 +173,8 @@
   const eventDayStart = instant(Y, M, D, 0, 0);
 
   // Preview: ?now=HH:MM (or YYYY-MM-DDTHH:MM) starts the clock at another moment,
-  // ?speed=60 runs it 60x faster.
+  // ?speed=60 runs it 60x faster. Only the clock speeds up: the pulses, glows
+  // and glides keep their normal pace.
   const params = new URLSearchParams(location.search);
   const previewStart = (() => {
     const raw = params.get("now");
@@ -250,7 +251,7 @@
       h("div", { class: "item-body" },
         h("article", { class: "card" },
           h("div", { class: "card-top" },
-            h("span", { class: "badge badge-live" }, h("span", { class: "badge-dot" }), isBreak ? "Now" : "Live now"),
+            h("span", { class: "badge badge-live" }, h("span", { class: "badge-dot" }), "Now"),
             h("span", { class: "badge badge-next", text: "Up next" }),
             h("p", { class: "meta" }, metaParts)),
           h("h2", { class: "title", text: s.title }),
@@ -313,16 +314,19 @@
   }
 
   // Sets the status title, optionally led by a styled countdown such as "T−31".
-  // Returns whether anything changed.
+  // The countdown is updated in place, so its orbiting glow keeps turning when
+  // the number changes. Returns whether anything changed.
+  const leadText = h("span", { class: "status-lead-text" });
+  const leadEl = h("span", { class: "status-lead" }, leadText);
+  const titleText = document.createTextNode("");
+
   function setTitle(lead, text) {
     const el = status.title;
     if (!lead) return setText(el, text);
-    if (el.firstElementChild && el.textContent === `${lead} ${text}`) return false;
-    el.replaceChildren(
-      h("span", { class: "status-lead" }, h("span", { class: "status-lead-text", text: lead })),
-      ` ${text}`,
-    );
-    return true;
+    const attached = el.firstChild === leadEl;
+    if (!attached) el.replaceChildren(leadEl, titleText);
+    const changed = [setText(leadText, lead), setText(titleText, ` ${text}`)].includes(true);
+    return !attached || changed;
   }
 
   if ("ResizeObserver" in window) {
@@ -394,8 +398,27 @@
   // Layout changes (fonts loading, window resizes) re-place the pointer without a glide.
   const layoutWatcher = "ResizeObserver" in window ? new ResizeObserver(() => paintMotion(true)) : null;
 
+  // Length of one glide (--glide in styles.css). A new glide waits for the last
+  // one to finish, so a fast ?speed preview plays the same full glide, just more
+  // often, rather than cutting each one short.
+  const glideMs = (() => {
+    const value = getComputedStyle(document.documentElement).getPropertyValue("--glide").trim();
+    const n = parseFloat(value);
+    if (!Number.isFinite(n)) return 800;
+    return /^[\d.]+ms/.test(value) ? n : n * 1000;
+  })();
+  let paintedMinute = null;
+  let glideStartedAt = -Infinity;
+
   function paintMotion(instant = false) {
     const t = now();
+    const minute = Math.floor(t / MINUTE);
+    if (!instant) {
+      if (minute === paintedMinute) return; // nothing has moved
+      if (performance.now() - glideStartedAt < glideMs) return; // let the current glide finish
+      glideStartedAt = performance.now();
+    }
+    paintedMinute = minute;
     const s = pointerRow;
     if (instant) timelineEl.classList.add("no-glide");
     if (s) {
@@ -418,7 +441,8 @@
     }
   }
 
-  // Only minute-to-minute steps glide; a new pointer row or live session is placed instantly.
+  // Only minute-to-minute steps glide; a new pointer row or live session is
+  // placed instantly. Returns whether the pointer row or live sessions changed.
   function setMotion(row, live) {
     const changed = row !== pointerRow || live.length !== liveRows.length || live.some((r, i) => r !== liveRows[i]);
     if (row !== pointerRow) {
@@ -431,6 +455,18 @@
     }
     liveRows = live;
     paintMotion(changed);
+    return changed;
+  }
+
+  // The "Now" dots and the pointer's outer ring share one fade (CSS live-pulse).
+  // One that starts later, e.g. on the next back-to-back session, is lined up
+  // with one already running so they all brighten and dim together. Pulses only
+  // start when a session or the bar's state changes, so this runs just then.
+  function syncPulses() {
+    const pulses = document.getAnimations?.().filter((a) => a.animationName === "live-pulse") ?? [];
+    const start = pulses.find((a) => a.startTime !== null)?.startTime;
+    if (start == null) return; // all just started together this frame
+    for (const a of pulses) if (a.startTime !== start) a.startTime = start;
   }
 
   // ---------------------------------------------------------------------------
@@ -482,7 +518,7 @@
     const upNext = beforeEventDay ? null : next;
     for (const s of sessions) s.el.classList.toggle("is-next", !!upNext && s.startMs === upNext.startMs);
     endEl.classList.toggle("is-past", t >= dayEnd);
-    setMotion(pointer, liveNow);
+    const motionChanged = setMotion(pointer, liveNow);
 
     let state;
     let badge = "";
@@ -501,7 +537,7 @@
       meta = `${fmt.shortDate.format(dayStart)} · ${fmt.time.format(dayStart)}`;
     } else if (live) {
       state = "live";
-      badge = live.type === "break" ? "Now" : "Live now";
+      badge = "Now";
       title = live.title;
       target = live;
       meta = `${formatDuration(live.endMs - t, Math.ceil)} left`;
@@ -524,6 +560,7 @@
       title = thanksText;
     }
 
+    const stateChanged = statusEl.dataset.state !== state;
     statusEl.dataset.state = state;
     const textChanged = [
       setText(status.badge, badge),
@@ -536,6 +573,7 @@
     if (target) status.title.setAttribute("href", `#${target.id}`);
     else status.title.removeAttribute("href");
     if (textChanged || clockChanged) fitStatus();
+    if (motionChanged || stateChanged) syncPulses();
 
     follow(beforeEventDay ? null : live ? live.el : next ? next.el : endEl);
   }
