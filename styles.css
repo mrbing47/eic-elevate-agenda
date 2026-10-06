@@ -287,8 +287,9 @@ a {
 }
 
 /* Countdown before the event day: "T−31" in a gradient-outlined capsule with a
-   glow that breathes around it */
+   glow that orbits around it */
 .status-lead {
+  position: relative;
   display: inline-block;
   margin-right: 0.3em;
   padding: 0.05em 0.5em;
@@ -300,7 +301,29 @@ a {
   letter-spacing: -0.01em;
   font-variant-numeric: tabular-nums;
   background: linear-gradient(var(--surface), var(--surface)) padding-box, var(--gradient) border-box;
-  animation: glow 2.4s ease-in-out infinite;
+  box-shadow: 0 0 3px rgb(9 52 241 / 0.12);
+}
+
+/* The orbiting glow: a blurred arc of the brand gradient sitting just behind the
+   pill (2px beyond its border, like a 10px 2px box-shadow), turned by
+   --glow-angle. The 0deg fallback keeps a still glow where @property is
+   unsupported. */
+.status-lead::before {
+  content: "";
+  position: absolute;
+  inset: -3.5px;
+  z-index: -1;
+  border-radius: inherit;
+  background: conic-gradient(
+    from var(--glow-angle, 0deg),
+    rgb(9 52 241 / 0) 0deg,
+    rgb(9 52 241 / 0.45) 70deg,
+    rgb(97 14 239 / 0.5) 130deg,
+    rgb(161 3 215 / 0.45) 190deg,
+    rgb(161 3 215 / 0) 260deg
+  );
+  filter: blur(5px);
+  animation: orbit 4s linear infinite;
 }
 
 .status-lead-text {
@@ -874,20 +897,23 @@ a {
   }
 }
 
-/* Breathing brand glow around the countdown capsule (brightness only, nothing moves) */
-@keyframes glow {
-  0%,
-  100% {
-    box-shadow: 0 0 3px 0 rgb(9 52 241 / 0.12), 0 0 0px 0 rgb(97 14 239 / 0.16);
-  }
-  50% {
-    box-shadow: 0 0 2px 1px rgb(9 52 241 / 0.28), 0 0 10px 2px rgb(161 3 215 / 0.36);
+/* Start angle of the countdown's glow, registered as an <angle> so it can animate */
+@property --glow-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+/* Turns the countdown's glow once around its pill */
+@keyframes orbit {
+  to {
+    --glow-angle: 360deg;
   }
 }
 
 /* Reduced motion: the pointer's ring fades instead of growing and the blinking
    dots stop. Short state transitions, the once-a-minute glide and the
-   countdown glow (a fade) stay. */
+   countdown's slow orbiting glow stay. */
 @media (prefers-reduced-motion: reduce) {
   .pointer::after {
     animation-name: pulse-fade;
