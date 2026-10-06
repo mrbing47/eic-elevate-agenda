@@ -286,6 +286,37 @@ a {
   text-underline-offset: 4px;
 }
 
+/* Countdown before the event day: "T−31" in a gradient-outlined capsule with a
+   glow that breathes around it */
+.status-lead {
+  display: inline-block;
+  margin-right: 0.3em;
+  padding: 0.05em 0.5em;
+  border: 1.5px solid transparent;
+  border-radius: 999px;
+  font-size: 1.15em;
+  font-weight: 800;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  background: linear-gradient(var(--surface), var(--surface)) padding-box, var(--gradient) border-box;
+  animation: glow 2.4s ease-in-out infinite;
+}
+
+.status-lead-text {
+  color: var(--eic-violet);
+  background: var(--gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* The title normally clips (for "…"), which would cut the countdown's glow off.
+   Long lines stack onto two rows instead, so there's nothing to clip here. */
+.status[data-state="early"] .status-title {
+  overflow: visible;
+}
+
 .status-meta {
   flex: none;
   font-weight: 700;
@@ -339,6 +370,11 @@ a {
 
 .status.is-stacked .status-clock {
   margin-left: auto;
+}
+
+/* The countdown is the headline, so it keeps the first line when stacked */
+.status[data-state="early"].is-stacked .status-title {
+  order: -1;
 }
 
 /* -----------------------------------------------------------------------------
@@ -838,8 +874,20 @@ a {
   }
 }
 
+/* Breathing brand glow around the countdown capsule (brightness only, nothing moves) */
+@keyframes glow {
+  0%,
+  100% {
+    box-shadow: 0 0 3px 0 rgb(9 52 241 / 0.12), 0 0 0px 0 rgb(97 14 239 / 0.16);
+  }
+  50% {
+    box-shadow: 0 0 2px 1px rgb(9 52 241 / 0.28), 0 0 10px 2px rgb(161 3 215 / 0.36);
+  }
+}
+
 /* Reduced motion: the pointer's ring fades instead of growing and the blinking
-   dots stop. Short state transitions and the once-a-minute glide stay. */
+   dots stop. Short state transitions, the once-a-minute glide and the
+   countdown glow (a fade) stay. */
 @media (prefers-reduced-motion: reduce) {
   .pointer::after {
     animation-name: pulse-fade;

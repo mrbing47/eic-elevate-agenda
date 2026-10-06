@@ -17,7 +17,7 @@
  */
 window.EVENT_AGENDA = {
   title: "ANZ EIC Elevate",
-  date: "2026-10-05",
+  date: "2026-11-06",
   timeZone: "Australia/Sydney",
   locale: "en-AU",
   venue: "Sydney",

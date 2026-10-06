@@ -6,7 +6,6 @@
   "use strict";
 
   const MINUTE = 60 * 1000;
-  const DAY = 24 * 60 * MINUTE;
   const TIME_RE = /^([01]?\d|2[0-3]):([0-5]\d)$/;
   const DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
   const NOW_RE = /^(?:(\d{4})-(\d{2})-(\d{2})[T ])?([01]?\d|2[0-3]):([0-5]\d)$/;
@@ -94,6 +93,23 @@
     return wall - zoneOffset(wall - zoneOffset(wall));
   }
 
+  // Calendar date [year, month, day] at instant `ms`, in the event's time zone.
+  function dateAt(ms) {
+    if (!timeZone) {
+      const d = new Date(ms);
+      return [d.getFullYear(), d.getMonth() + 1, d.getDate()];
+    }
+    const p = {};
+    for (const { type, value } of wallClock.formatToParts(new Date(ms))) p[type] = value;
+    return [+p.year, +p.month, +p.day];
+  }
+
+  // Whole calendar days from instant `ms` until the event date (immune to DST shifts).
+  function daysToEvent(ms) {
+    const [y, m, d] = dateAt(ms);
+    return Math.round((Date.UTC(Y, M - 1, D) - Date.UTC(y, m - 1, d)) / (24 * 60 * MINUTE));
+  }
+
   const fmt = {
     time: new Intl.DateTimeFormat(locale, { hour: "numeric", minute: "2-digit", timeZone }),
     clock: new Intl.DateTimeFormat(locale, { hour: "numeric", minute: "2-digit", second: "2-digit", timeZone }),
@@ -153,6 +169,8 @@
   const count = sessions.length;
   const dayStart = sessions[0].startMs;
   const dayEnd = Math.max(...sessions.map((s) => s.endMs));
+  // "Coming up" / "Up next" only appear from midnight on the event day (event time zone).
+  const eventDayStart = instant(Y, M, D, 0, 0);
 
   // Preview: ?now=HH:MM (or YYYY-MM-DDTHH:MM) starts the clock at another moment,
   // ?speed=60 runs it 60x faster.
@@ -294,6 +312,19 @@
     statusEl.classList.toggle("is-stacked", title.scrollWidth > title.clientWidth + 1);
   }
 
+  // Sets the status title, optionally led by a styled countdown such as "T−31".
+  // Returns whether anything changed.
+  function setTitle(lead, text) {
+    const el = status.title;
+    if (!lead) return setText(el, text);
+    if (el.firstElementChild && el.textContent === `${lead} ${text}`) return false;
+    el.replaceChildren(
+      h("span", { class: "status-lead" }, h("span", { class: "status-lead-text", text: lead })),
+      ` ${text}`,
+    );
+    return true;
+  }
+
   if ("ResizeObserver" in window) {
     let width = 0;
     new ResizeObserver(([entry]) => {
@@ -324,11 +355,12 @@
     });
   }
 
-  let focusEl = null;
+  let focusEl; // undefined until the first tick
   function follow(el) {
     if (el === focusEl) return;
-    const isFirst = focusEl === null;
+    const isFirst = focusEl === undefined;
     focusEl = el;
+    if (!el) return; // nothing to follow before the event day
     if (isFirst) {
       if (location.hash) return;
       (document.fonts?.ready ?? Promise.resolve()).then(() => bringIntoView(el));
@@ -406,6 +438,7 @@
   // ---------------------------------------------------------------------------
   function tick() {
     const t = now();
+    const beforeEventDay = t < eventDayStart;
 
     const [digits, period] = timeParts(t, fmt.clock);
     setText(clockDigits, digits);
@@ -446,18 +479,27 @@
       }
     });
 
-    for (const s of sessions) s.el.classList.toggle("is-next", !!next && s.startMs === next.startMs);
+    const upNext = beforeEventDay ? null : next;
+    for (const s of sessions) s.el.classList.toggle("is-next", !!upNext && s.startMs === upNext.startMs);
     endEl.classList.toggle("is-past", t >= dayEnd);
     setMotion(pointer, liveNow);
 
     let state;
-    let badge;
+    let badge = "";
+    let lead = "";
     let title;
     let target = null;
     let meta = "";
     let nextText = "";
 
-    if (live) {
+    if (beforeEventDay) {
+      // Countdown until the event day; "Coming up" / "Up next" start at midnight on the day.
+      const days = daysToEvent(t);
+      state = "early";
+      lead = `T\u2212${days}`;
+      title = `${days === 1 ? "day" : "days"} till the event`;
+      meta = `${fmt.shortDate.format(dayStart)} · ${fmt.time.format(dayStart)}`;
+    } else if (live) {
       state = "live";
       badge = live.type === "break" ? "Now" : "Live now";
       title = live.title;
@@ -469,9 +511,7 @@
       badge = "Coming up";
       title = sessions[0].title;
       target = sessions[0];
-      meta = dayStart - t < DAY
-        ? `Starts in ${formatDuration(dayStart - t, Math.ceil)}`
-        : `${fmt.shortDate.format(dayStart)} · ${fmt.time.format(dayStart)}`;
+      meta = `Starts in ${formatDuration(dayStart - t, Math.ceil)}`;
     } else if (next) {
       state = "gap";
       badge = "Up next";
@@ -487,16 +527,17 @@
     statusEl.dataset.state = state;
     const textChanged = [
       setText(status.badge, badge),
-      setText(status.title, title),
+      setTitle(lead, title),
       setText(status.meta, meta),
       setText(status.next, nextText),
     ].includes(true);
-    setText(status.announce, `${badge}: ${title}`);
+    const spoken = lead ? `${lead} ${title}` : title;
+    setText(status.announce, badge ? `${badge}: ${spoken}` : spoken);
     if (target) status.title.setAttribute("href", `#${target.id}`);
     else status.title.removeAttribute("href");
     if (textChanged || clockChanged) fitStatus();
 
-    follow(live ? live.el : next ? next.el : endEl);
+    follow(beforeEventDay ? null : live ? live.el : next ? next.el : endEl);
   }
 
   function loop() {
