@@ -145,6 +145,34 @@
   // ---------------------------------------------------------------------------
   // Sessions
   // ---------------------------------------------------------------------------
+  // A link's address: a web page or a file next to this page, never javascript: and the like.
+  function safeHref(raw) {
+    const value = String(raw ?? "").trim();
+    if (!value) return null;
+    try {
+      const url = new URL(value, document.baseURI);
+      return ["http:", "https:", location.protocol].includes(url.protocol) ? url.href : null;
+    } catch {
+      return null;
+    }
+  }
+
+  // Optional details shown once a session starts: { text, links: [{ label, url }] }.
+  function readDetails(raw, i) {
+    if (raw == null) return null;
+    const text = typeof raw.text === "string" ? raw.text.trim() : "";
+    const links = [];
+    for (const link of [].concat(raw.links ?? [])) {
+      const label = String(link?.label ?? "").trim();
+      const href = safeHref(link?.url);
+      if (label && href) links.push({ label, href });
+      else console.warn(`[agenda] Skipping a link in session #${i + 1}: it needs a label and a web address.`, link);
+    }
+    if (text || links.length) return { text, links };
+    console.warn(`[agenda] Ignoring details for session #${i + 1}: give it text and/or links.`, raw);
+    return null;
+  }
+
   const sessions = config.sessions
     .map((s, i) => {
       const start = TIME_RE.exec(String(s?.start ?? "").trim());
@@ -156,7 +184,7 @@
       const startMs = instant(Y, M, D, +start[1], +start[2]);
       let endMs = instant(Y, M, D, +end[1], +end[2]);
       if (endMs < startMs) endMs = instant(Y, M, D + 1, +end[1], +end[2]); // runs past midnight
-      return { ...s, startMs, endMs };
+      return { ...s, startMs, endMs, details: readDetails(s.details, i) };
     })
     .filter(Boolean)
     .sort((a, b) => a.startMs - b.startMs || a.endMs - b.endMs);
@@ -244,6 +272,14 @@
     },
       h("div", { class: "progress-track" }, s.barEl),
       h("div", { class: "progress-text" }, s.elapsedEl, s.leftEl));
+
+    // Built now, but only added to the card once the session starts (see tick).
+    s.detailsEl = s.details && h("div", { class: "details" },
+      s.details.text && h("p", { class: "details-text", text: s.details.text }),
+      s.details.links.length > 0 && h("ul", { class: "details-links" },
+        s.details.links.map(({ label, href }) => h("li", null,
+          h("a", { class: "details-link", href, target: "_blank", rel: "noopener" },
+            label, h("span", { class: "visually-hidden", text: " (opens in a new tab)" }))))));
 
     s.el = h("li", { class: isBreak ? "item is-break" : "item", id: s.id },
       h("div", { class: "item-time" }, timeEl(s.startMs, "item-start")),
@@ -510,6 +546,13 @@
 
       s.el.classList.toggle("rail-done", t >= s.segmentEndMs);
       if (hasPointer) setText(s.chipEl, fmt.time.format(t));
+
+      // Details (e.g. slides) join the card when the session starts and stay afterwards.
+      const showDetails = t >= s.startMs;
+      if (s.detailsEl && showDetails !== s.detailsEl.isConnected) {
+        if (showDetails) s.progressEl.before(s.detailsEl);
+        else s.detailsEl.remove();
+      }
 
       if (isLive) {
         const elapsed = t - s.startMs;

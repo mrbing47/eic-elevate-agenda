@@ -23,6 +23,9 @@ Everything lives in [`agenda.js`](agenda.js):
 | `sessions[].start` / `end` | `"13:30"` | 24-hour time |
 | `sessions[].speaker`, `location`, `description` | | Optional |
 | `sessions[].type` | `"break"` | Optional, gives a lighter card |
+| `sessions[].details` | `{ links: [{ label: "Slides", url: "https://…" }] }` | Optional. Appears when the session starts and stays afterwards. Can also have `text` |
+
+`details` is only hidden on the page. Anyone who opens `agenda.js` (or this repository) can read it early, so if slides must stay private until the session, add the link (or share the file) when the session starts.
 
 ## Preview a moment in time
 
