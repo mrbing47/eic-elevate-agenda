@@ -13,8 +13,9 @@
  *               details        -> appears when the session starts and stays
  *                                 after it ends, e.g. for slides:
  *                   details: { links: [{ label: "Slides", url: "https://..." }] }
- *                 Add text: "..." for a line of text. It's only hidden on the
- *                 page: anyone can read this file, so keep secrets out of it.
+ *                 Add text: "..." for a line of text, or steps: ["...", "..."]
+ *                 for numbered steps (shown below the links). It's only hidden
+ *                 on the page: anyone can read this file, so keep secrets out of it.
  *
  * Preview the page at any moment by adding ?now=HH:MM (or
  * ?now=YYYY-MM-DDTHH:MM) to the URL, e.g. index.html?now=10:45
@@ -67,7 +68,19 @@ window.EVENT_AGENDA = {
     },
     {
       start: "11:00", end: "11:15",
-      title: "Mini activity - NFC LinkedIn card reader"
+      title: "Mini activity - NFC LinkedIn card reader",
+      details: {
+        // Example app links and steps: replace them with the real ones before the event.
+        links: [
+          { label: "Install on iOS", url: "https://example.com/nfc-app-ios" },
+          { label: "Install on Android", url: "https://example.com/nfc-app-android" }
+        ],
+        steps: [
+          "Open the app",
+          "Paste your LinkedIn or GitHub profile link",
+          "Tap your NFC tag on your phone to record it"
+        ]
+      }
     },
     {
       start: "11:15", end: "12:00",

@@ -157,7 +157,8 @@
     }
   }
 
-  // Optional details shown once a session starts: { text, links: [{ label, url }] }.
+  // Optional details shown once a session starts:
+  // { text, links: [{ label, url }], steps: ["...", "..."] }.
   function readDetails(raw, i) {
     if (raw == null) return null;
     const text = typeof raw.text === "string" ? raw.text.trim() : "";
@@ -168,8 +169,14 @@
       if (label && href) links.push({ label, href });
       else console.warn(`[agenda] Skipping a link in session #${i + 1}: it needs a label and a web address.`, link);
     }
-    if (text || links.length) return { text, links };
-    console.warn(`[agenda] Ignoring details for session #${i + 1}: give it text and/or links.`, raw);
+    const steps = [];
+    for (const step of [].concat(raw.steps ?? [])) {
+      const value = typeof step === "string" ? step.trim() : "";
+      if (value) steps.push(value);
+      else console.warn(`[agenda] Skipping a step in session #${i + 1}: each step is a line of text.`, step);
+    }
+    if (text || links.length || steps.length) return { text, links, steps };
+    console.warn(`[agenda] Ignoring details for session #${i + 1}: give it text, links and/or steps.`, raw);
     return null;
   }
 
@@ -279,7 +286,9 @@
       s.details.links.length > 0 && h("ul", { class: "details-links" },
         s.details.links.map(({ label, href }) => h("li", null,
           h("a", { class: "details-link", href, target: "_blank", rel: "noopener" },
-            label, h("span", { class: "visually-hidden", text: " (opens in a new tab)" }))))));
+            label, h("span", { class: "visually-hidden", text: " (opens in a new tab)" }))))),
+      s.details.steps.length > 0 && h("ol", { class: "details-steps" },
+        s.details.steps.map((step) => h("li", { text: step }))));
 
     s.el = h("li", { class: isBreak ? "item is-break" : "item", id: s.id },
       h("div", { class: "item-time" }, timeEl(s.startMs, "item-start")),

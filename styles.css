@@ -738,16 +738,35 @@ a {
   color: var(--muted);
 }
 
-/* Details (e.g. slides): app.js adds these once the session starts */
+/* Details (e.g. slides or steps): app.js adds these once the session starts */
 .details {
+  display: grid;
+  gap: 0.6rem;
   margin-top: 0.75rem;
 }
 
 .details-text {
   max-width: 62ch;
-  margin: 0 0 0.5rem;
+  margin: 0;
   font-size: 0.92rem;
   color: var(--text-soft);
+}
+
+.details-steps {
+  max-width: 62ch;
+  margin: 0;
+  padding-left: 1.4em;
+  font-size: 0.92rem;
+  color: var(--text-soft);
+}
+
+.details-steps li + li {
+  margin-top: 0.3rem;
+}
+
+.details-steps li::marker {
+  font-weight: 700;
+  color: var(--eic-violet);
 }
 
 .details-links {
