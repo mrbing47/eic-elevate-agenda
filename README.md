@@ -18,14 +18,15 @@ Everything lives in [`agenda.js`](agenda.js):
 
 | Field | Example | Notes |
 | --- | --- | --- |
+| `theme` | `"Growing your career in the *frontier generation*"` | Optional line under the logo. Words in `*asterisks*` get the brand highlight |
 | `date` | `"2026-11-06"` | Event day |
 | `timeZone` | `"Australia/Sydney"` | Time zone the session times are written in |
 | `sessions[].start` / `end` | `"13:30"` | 24-hour time |
 | `sessions[].speaker`, `location`, `description` | | Optional |
 | `sessions[].type` | `"break"` | Optional, gives a lighter card |
-| `sessions[].details` | `{ links: [{ label: "Slides", url: "https://…" }] }` | Optional. Appears when the session starts and stays afterwards. Can also have `text`, and `steps: ["…", "…"]` for numbered steps below the links |
+| `sessions[].details` | `{ links: [{ label: "Slides", url: "https://…" }] }` | Optional. Appears when the session starts and stays afterwards. Can also have `text`, and `steps: ["…", "…"]` for numbered steps below the links. A link can have `heading: "…"` to show it in its own box under that heading, and `qr: "assets/qr/….svg"`, a QR code image of the same link that shows in the box on screens bigger than a phone |
 
-`details` is only hidden on the page. Anyone who opens `agenda.js` (or this repository) can read it early, so if slides must stay private until the session, add the link (or share the file) when the session starts.
+`details` is only hidden on the page. Anyone who opens `agenda.js` (or this repository), or adds `?details=all` to the page address, can see it early, so if slides must stay private until the session, add the link (or share the file) when the session starts.
 
 ## Preview a moment in time
 
@@ -34,6 +35,8 @@ Add `?now=` to the URL to see the page as it would look at another time:
 - `index.html?now=10:45` – on the event day
 - `index.html?now=2026-11-05T18:00` – any date/time (in the event's time zone)
 - `index.html?now=10:45&speed=60` – also runs the clock 60× faster, so you can watch the pointer move and the sessions change. Only the clock speeds up; the pulses, glows and glides keep their normal pace.
+
+To get the page reviewed before the event, add `?details=all`: every session's details (links, QR codes and steps) show straight away instead of when the session starts. It works with the options above too, e.g. `index.html?now=10:45&details=all`. The header shows a "Preview" label whenever any of these options are on.
 
 ## Deploy
 

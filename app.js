@@ -158,7 +158,9 @@
   }
 
   // Optional details shown once a session starts:
-  // { text, links: [{ label, url }], steps: ["...", "..."] }.
+  // { text, links: [{ label, url, heading, qr }], steps: ["...", "..."] }.
+  // heading puts the link in its own box under that title; qr adds an image of
+  // a QR code for the link (e.g. "assets/qr/app.svg") to that box.
   function readDetails(raw, i) {
     if (raw == null) return null;
     const text = typeof raw.text === "string" ? raw.text.trim() : "";
@@ -166,8 +168,15 @@
     for (const link of [].concat(raw.links ?? [])) {
       const label = String(link?.label ?? "").trim();
       const href = safeHref(link?.url);
-      if (label && href) links.push({ label, href });
-      else console.warn(`[agenda] Skipping a link in session #${i + 1}: it needs a label and a web address.`, link);
+      if (!label || !href) {
+        console.warn(`[agenda] Skipping a link in session #${i + 1}: it needs a label and a web address.`, link);
+        continue;
+      }
+      const heading = typeof link.heading === "string" ? link.heading.trim() : "";
+      if (link.heading != null && !heading) console.warn(`[agenda] Ignoring the heading for "${label}" in session #${i + 1}: it needs some text.`, link.heading);
+      const qr = link.qr == null ? null : safeHref(link.qr);
+      if (link.qr != null && !qr) console.warn(`[agenda] Ignoring the QR code for "${label}" in session #${i + 1}: give it an image path.`, link.qr);
+      links.push({ label, href, heading, qr });
     }
     const steps = [];
     for (const step of [].concat(raw.steps ?? [])) {
@@ -209,7 +218,8 @@
 
   // Preview: ?now=HH:MM (or YYYY-MM-DDTHH:MM) starts the clock at another moment,
   // ?speed=60 runs it 60x faster. Only the clock speeds up: the pulses, glows
-  // and glides keep their normal pace.
+  // and glides keep their normal pace. ?details=all shows every session's
+  // details straight away instead of when it starts, e.g. for reviewing the page.
   const params = new URLSearchParams(location.search);
   const previewStart = (() => {
     const raw = params.get("now");
@@ -222,7 +232,15 @@
     return m[1] ? instant(+m[1], +m[2], +m[3], +m[4], +m[5]) : instant(Y, M, D, +m[4], +m[5]);
   })();
   const speed = clamp(Number(params.get("speed")) || 1, 1, 3600);
-  const isPreview = previewStart !== null || speed !== 1;
+  const showAllDetails = (() => {
+    const raw = params.get("details");
+    if (raw == null) return false;
+    if (raw.trim().toLowerCase() === "all") return true;
+    console.warn(`[agenda] Ignoring ?details=${raw}. Use ?details=all.`);
+    return false;
+  })();
+  const simulatedTime = previewStart !== null || speed !== 1;
+  const isPreview = simulatedTime || showAllDetails;
   const loadedAt = Date.now();
   const clockStart = previewStart ?? loadedAt;
   const now = () => clockStart + (Date.now() - loadedAt) * speed;
@@ -281,10 +299,16 @@
       h("div", { class: "progress-text" }, s.elapsedEl, s.leftEl));
 
     // Built now, but only added to the card once the session starts (see tick).
-    s.detailsEl = s.details && h("div", { class: "details" },
+    // A link with a heading or QR code gets its own box: heading, QR code, then
+    // the button, which is the only part you click. With QR codes, larger
+    // screens show the boxes beside the steps (see styles.css).
+    const hasQr = s.details?.links.some((link) => link.qr);
+    s.detailsEl = s.details && h("div", { class: hasQr && s.details.steps.length > 0 ? "details details-split" : "details" },
       s.details.text && h("p", { class: "details-text", text: s.details.text }),
       s.details.links.length > 0 && h("ul", { class: "details-links" },
-        s.details.links.map(({ label, href }) => h("li", null,
+        s.details.links.map(({ label, href, heading, qr }) => h("li", { class: heading || qr ? "details-box" : null },
+          heading && h("p", { class: "details-box-heading", text: heading }),
+          qr && h("img", { class: "details-qr", src: qr, alt: "" }),
           h("a", { class: "details-link", href, target: "_blank", rel: "noopener" },
             label, h("span", { class: "visually-hidden", text: " (opens in a new tab)" }))))),
       s.details.steps.length > 0 && h("ol", { class: "details-steps" },
@@ -331,9 +355,22 @@
   setText($("event-date"), fmt.date.format(dayStart));
   if (config.venue) setText($("event-venue"), config.venue);
   else $("event-venue").hidden = true;
+
+  // Event theme: words wrapped in *asterisks* get the brand highlight.
+  const theme = typeof config.theme === "string" ? config.theme.trim() : "";
+  if (theme) {
+    const themeEl = $("event-theme");
+    themeEl.replaceChildren(...theme.split(/\*([^*]+)\*/)
+      .map((part, i) => (i % 2 ? h("span", { class: "theme-accent", text: part }) : part)));
+    themeEl.hidden = false;
+  }
   setText($("clock-label"), city ? `${city} time · ${zoneAt(now())}` : "Local time");
   setText($("footer-note"), `All times are ${city ? `${city} time` : "local time"}${eventZone ? ` (${eventZone})` : ""}.`);
   $("preview-flag").hidden = !isPreview;
+  if (isPreview) {
+    setText($("preview-flag"), ["Preview", simulatedTime && "simulated time", showAllDetails && "all details shown"]
+      .filter(Boolean).join(" · "));
+  }
 
   const clockEl = $("clock-time");
   const clockDigits = h("span", { class: "clock-digits" });
@@ -556,8 +593,9 @@
       s.el.classList.toggle("rail-done", t >= s.segmentEndMs);
       if (hasPointer) setText(s.chipEl, fmt.time.format(t));
 
-      // Details (e.g. slides) join the card when the session starts and stay afterwards.
-      const showDetails = t >= s.startMs;
+      // Details (e.g. slides) join the card when the session starts and stay
+      // afterwards; with ?details=all they're there from the start.
+      const showDetails = showAllDetails || t >= s.startMs;
       if (s.detailsEl && showDetails !== s.detailsEl.isConnected) {
         if (showDetails) s.progressEl.before(s.detailsEl);
         else s.detailsEl.remove();

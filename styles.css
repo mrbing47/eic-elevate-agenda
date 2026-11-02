@@ -127,6 +127,9 @@ a {
   padding: clamp(1.5rem, 4vw, 3rem) 0 clamp(1.25rem, 3vw, 2.25rem);
 }
 
+/* Narrow: stacked. The logo, the theme directly under it, then the date and
+   clock (side by side when they fit). Wider screens use grids instead (end of
+   this section). */
 .hero-inner {
   display: flex;
   flex-wrap: wrap;
@@ -135,7 +138,7 @@ a {
 }
 
 .brand {
-  flex: none;
+  flex: 0 0 100%;
   margin: 0;
   line-height: 0;
 }
@@ -148,8 +151,6 @@ a {
 
 .hero-meta {
   flex: 1 1 15rem;
-  padding-left: clamp(1.25rem, 3vw, 2.5rem);
-  border-left: 2px solid var(--line);
 }
 
 .eyebrow {
@@ -172,6 +173,7 @@ a {
   font-weight: 700;
   line-height: 1.2;
   letter-spacing: -0.02em;
+  text-wrap: balance;
 }
 
 .event-venue {
@@ -223,6 +225,92 @@ a {
 
 .preview-flag[hidden] {
   display: none;
+}
+
+/* Event theme: a statement line directly under the logo. When stacked, the
+   space below it sets the date apart from the logo and theme. */
+.theme {
+  flex-basis: 100%;
+  margin: 0.25rem 0 0.75rem;
+  padding-bottom: 0.3em; /* room for the swoosh */
+  font-size: clamp(1.35rem, 1rem + 1.4vw, 2.1rem);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+/* Highlighted words: the logo's gradient, with a brush-stroke swoosh under
+   them like the one under "Elevate" */
+.theme-accent {
+  position: relative;
+  display: inline-block;
+  font-weight: 800;
+  color: var(--eic-violet);
+  background: var(--gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.theme-accent::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: -0.15em;
+  bottom: -0.3em;
+  height: 0.34em;
+  background: var(--gradient);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 22' preserveAspectRatio='none'%3E%3Cpath d='M3 14C50 9 120 4 198 3c1 .2 1 1.6-1 1.7C120 6 52 12 5 19.5c-4 .5-5-4.5-2-5.5z'/%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 22' preserveAspectRatio='none'%3E%3Cpath d='M3 14C50 9 120 4 198 3c1 .2 1 1.6-1 1.7C120 6 52 12 5 19.5c-4 .5-5-4.5-2-5.5z'/%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat;
+}
+
+/* Medium: the date moves up beside the logo (with a divider) and the clock
+   sits beside the theme. Wide: the clock joins the top row and the theme gets
+   the full width. Grids rather than flex-wrap, so nothing can wrap
+   unexpectedly and push the theme away from the logo. */
+@media (min-width: 36rem) {
+  .hero-inner {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .brand {
+    grid-row: 1;
+    grid-column: 1;
+  }
+
+  .hero-meta {
+    grid-row: 1;
+    grid-column: 2 / -1;
+    padding-left: clamp(1.25rem, 3vw, 2.5rem);
+    border-left: 2px solid var(--line);
+  }
+
+  .theme {
+    grid-row: 2;
+    grid-column: 1 / 3;
+    margin-bottom: 0;
+  }
+
+  .clock {
+    grid-row: 2;
+    grid-column: 3;
+  }
+}
+
+@media (min-width: 64rem) {
+  .hero-meta {
+    grid-column: 2;
+  }
+
+  .clock {
+    grid-row: 1;
+  }
+
+  .theme {
+    grid-column: 1 / -1;
+  }
 }
 
 /* -----------------------------------------------------------------------------
@@ -435,7 +523,12 @@ a {
   margin-left: auto;
 }
 
-/* The countdown is the headline, so it keeps the first line when stacked */
+/* The countdown is the headline, so it keeps the first line when stacked, with
+   extra room under it for its glow */
+.status[data-state="early"].is-stacked .status-inner {
+  row-gap: 0.75rem;
+}
+
 .status[data-state="early"].is-stacked .status-title {
   order: -1;
 }
@@ -814,6 +907,80 @@ a {
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.5 2.5h5v5M9.5 2.5l-7 7'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 
+/* Link boxes (links with a heading or QR code): heading, QR code, then the
+   button, which is the only part you click. Phones hide the QR code, as
+   nobody can scan their own screen, leaving the heading over the button.
+   Larger screens line the boxes up side by side (16px apart on every card),
+   beside the steps when there are some (.details-split), or below them if
+   there isn't room. */
+.details-box {
+  display: flex;
+  flex: 1 1 100%;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.45rem;
+  padding: 0.65rem 0.85rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 0.9rem;
+  background: var(--surface);
+}
+
+.details-box-heading {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.details-qr {
+  display: none;
+}
+
+@media (min-width: 40.01rem) {
+  .details-split {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0.6rem clamp(1.5rem, 4vw, 3rem);
+  }
+
+  .details-split > .details-text {
+    flex-basis: 100%;
+    max-width: none;
+  }
+
+  .details-split > .details-steps {
+    order: 1;
+    flex: 1 1 18rem;
+  }
+
+  .details-split > .details-links {
+    order: 2;
+  }
+
+  .details-links:has(> .details-box) {
+    gap: 1rem;
+  }
+
+  .details-box {
+    flex: none;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.8rem 0.85rem 0.9rem;
+    box-shadow: 0 6px 16px -10px rgb(3 10 37 / 0.25);
+  }
+
+  .details-box-heading {
+    font-size: 1.05rem;
+  }
+
+  .details-qr {
+    display: block;
+    width: 9.5rem;
+    height: 9.5rem;
+  }
+}
+
 .progress {
   display: none;
   margin-top: 1.25rem;
@@ -1047,18 +1214,12 @@ a {
     width: min(100% - 1.5rem, 70rem);
   }
 
-  .brand {
-    flex-basis: 100%;
-  }
-
   .brand-logo {
     height: 5.5rem;
   }
 
   .hero-meta {
     flex-basis: 10rem;
-    padding-left: 0;
-    border-left: 0;
   }
 
   .item-start {
@@ -1118,6 +1279,7 @@ a {
 
   /* Printers drop backgrounds, so gradient text needs a solid fill */
   .eyebrow,
+  .theme-accent,
   .end-thanks {
     background: none;
     -webkit-text-fill-color: currentColor;

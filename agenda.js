@@ -3,6 +3,8 @@
  * ----------------------------------------------------------------------------
  * This is the only file you need to edit to update the agenda.
  *
+ *   theme     Optional line shown in the header under the logo. Wrap words
+ *             in *asterisks* to give them the brand highlight.
  *   date      Event day as "YYYY-MM-DD".
  *   timeZone  IANA time zone the session times are written in, e.g.
  *             "Australia/Sydney", "Australia/Melbourne", "Pacific/Auckland".
@@ -14,15 +16,23 @@
  *                                 after it ends, e.g. for slides:
  *                   details: { links: [{ label: "Slides", url: "https://..." }] }
  *                 Add text: "..." for a line of text, or steps: ["...", "..."]
- *                 for numbered steps (shown below the links). It's only hidden
- *                 on the page: anyone can read this file, so keep secrets out of it.
+ *                 for numbered steps (shown below the links). A link can also
+ *                 have heading: "..." to show it in its own box under that
+ *                 heading, and qr: "assets/qr/....svg", a QR code image of the
+ *                 same link, shown in the box on screens bigger than a phone.
+ *                 In one session, give all links a heading and QR code or
+ *                 none, so they line up as matching boxes.
+ *                 It's only hidden on the page: anyone can read this file (or
+ *                 add ?details=all to the address), so keep secrets out of it.
  *
  * Preview the page at any moment by adding ?now=HH:MM (or
  * ?now=YYYY-MM-DDTHH:MM) to the URL, e.g. index.html?now=10:45
- * Add &speed=60 to run the clock 60x faster.
+ * Add &speed=60 to run the clock 60x faster, and ?details=all to show every
+ * session's details straight away (e.g. to get the page reviewed).
  */
 window.EVENT_AGENDA = {
   title: "ANZ EIC Elevate",
+  theme: "Growing your career in the *frontier generation*",
   date: "2026-11-06",
   timeZone: "Australia/Sydney",
   locale: "en-AU",
@@ -70,15 +80,30 @@ window.EVENT_AGENDA = {
       start: "11:00", end: "11:15",
       title: "Mini activity - NFC LinkedIn card reader",
       details: {
-        // Example app links and steps: replace them with the real ones before the event.
+        text: "Download NFC Tools",
         links: [
-          { label: "Install on iOS", url: "https://example.com/nfc-app-ios" },
-          { label: "Install on Android", url: "https://example.com/nfc-app-android" }
+          {
+            heading: "iPhone",
+            label: "App Store",
+            url: "https://apps.apple.com/nz/app/nfc-tools/id1252962749",
+            qr: "assets/qr/nfc-tools-iphone.svg"
+          },
+          {
+            heading: "Android",
+            label: "Play Store",
+            url: "https://play.google.com/store/apps/details?id=com.wakdev.wdnfc&hl=en-US",
+            qr: "assets/qr/nfc-tools-android.svg"
+          }
         ],
         steps: [
-          "Open the app",
-          "Paste your LinkedIn or GitHub profile link",
-          "Tap your NFC tag on your phone to record it"
+          "Open NFC Tools",
+          "Click on Write",
+          "Add a record",
+          "Find “Social Network”",
+          "Click on Edit",
+          "Find LinkedIn or GitHub",
+          "Enter your username or profile URL, then press Enter",
+          "Click on Write and scan your NFC tag"
         ]
       }
     },
@@ -100,13 +125,36 @@ window.EVENT_AGENDA = {
       start: "14:00", end: "15:30",
       title: "Hackathon",
       details: {
-        // Example link: replace it with the real slides before the event.
-        links: [{ label: "Slides", url: "https://example.com/hackathon-slides" }]
+        links: [
+          {
+            heading: "Registration",
+            label: "Open form",
+            url: "https://forms.cloud.microsoft/r/ke8f0btuXi",
+            qr: "assets/qr/hackathon-registration.svg"
+          },
+          {
+            // Example link and QR code: replace both with the real slides before the event.
+            heading: "Slides",
+            label: "Open slides",
+            url: "https://example.com/hackathon-slides",
+            qr: "assets/qr/hackathon-slides.svg"
+          }
+        ]
       }
     },
     {
       start: "15:30", end: "16:00",
-      title: "Close + prizes + feedback"
+      title: "Close + prizes + feedback",
+      details: {
+        links: [
+          {
+            heading: "Feedback",
+            label: "Open form",
+            url: "https://forms.cloud.microsoft/r/VtaaS3Zf3T",
+            qr: "assets/qr/feedback-form.svg"
+          }
+        ]
+      }
     }
   ]
 };
