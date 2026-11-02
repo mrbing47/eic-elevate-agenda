@@ -133,10 +133,9 @@ window.EVENT_AGENDA = {
             qr: "assets/qr/hackathon-registration.svg"
           },
           {
-            // Example link and QR code: replace both with the real slides before the event.
             heading: "Slides",
             label: "Open slides",
-            url: "https://example.com/hackathon-slides",
+            url: "https://microsoftapc-my.sharepoint.com/:p:/g/personal/yvonnezhang_microsoft_com/cQrJukiQw7QURpSJQtltkWZZEgUC6FijNwFWVIlJgctUmNaRtQ",
             qr: "assets/qr/hackathon-slides.svg"
           }
         ]
