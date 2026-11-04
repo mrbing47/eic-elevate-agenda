@@ -310,7 +310,8 @@
   // Preview: ?now=HH:MM (or YYYY-MM-DDTHH:MM) starts the clock at another moment,
   // ?speed=60 runs it 60x faster. Only the clock speeds up: the pulses, glows
   // and glides keep their normal pace. ?details=all shows every session's
-  // details straight away instead of when it starts, e.g. for reviewing the page.
+  // parts and details straight away instead of when it starts, e.g. for
+  // reviewing the page.
   const params = new URLSearchParams(location.search);
   const previewStart = (() => {
     const raw = params.get("now");
@@ -389,21 +390,23 @@
       h("div", { class: "progress-track" }, s.barEl),
       h("div", { class: "progress-text" }, s.elapsedEl, s.leftEl));
 
-    // Details are built now, but only added to the card (or to their part)
-    // once the session starts (see tick).
-    s.detailsEl = s.details && detailsBlock(s.details);
-
     // Parts (e.g. the hackathon's plan): start time, what happens and for how
-    // long. The live update marks the part happening now and counts it down.
+    // long, then the part's own details. The live update marks the part
+    // happening now and counts it down.
     for (const part of s.parts) {
       part.length = formatDuration(part.endMs - part.startMs);
       part.lengthEl = h("span", { class: "part-length", text: part.length });
       part.el = h("li", { class: "part" },
         timeEl(part.startMs, "part-start"),
         h("span", { class: "part-title", text: part.title }),
-        part.lengthEl);
-      part.detailsEl = part.details && detailsBlock(part.details);
+        part.lengthEl,
+        part.details && detailsBlock(part.details));
     }
+
+    // Parts and details are built now, but only added to the card once the
+    // session starts (see tick).
+    s.partsEl = s.parts.length > 0 && h("ol", { class: "parts" }, s.parts.map((part) => part.el));
+    s.detailsEl = s.details && detailsBlock(s.details);
 
     s.el = h("li", { class: isBreak ? "item is-break" : "item", id: s.id },
       h("div", { class: "item-time" }, timeEl(s.startMs, "item-start")),
@@ -418,7 +421,6 @@
           s.speaker && h("p", { class: "speaker", text: s.speaker }),
           s.description && h("p", { class: "desc", text: s.description }),
           s.people.length > 0 && peopleList(s.people),
-          s.parts.length > 0 && h("ol", { class: "parts" }, s.parts.map((part) => part.el)),
           s.progressEl)));
 
     s.el.style.setProperty("--c1", brandAt(i / count));
@@ -704,20 +706,19 @@
       s.el.classList.toggle("rail-done", t >= s.segmentEndMs);
       if (hasPointer) setText(s.chipEl, fmt.time.format(t));
 
-      // Details (e.g. slides) join the card, and its parts, when the session
-      // starts and stay afterwards; with ?details=all they're there from the start.
+      // Parts (e.g. the hackathon's plan) and details (e.g. slides) join the
+      // card when the session starts and stay afterwards, in that order; with
+      // ?details=all they're there from the start.
       const showDetails = showAllDetails || t >= s.startMs;
-      if (s.detailsEl && showDetails !== s.detailsEl.isConnected) {
-        if (showDetails) s.progressEl.before(s.detailsEl);
-        else s.detailsEl.remove();
+      for (const el of [s.partsEl, s.detailsEl]) {
+        if (el && showDetails !== el.isConnected) {
+          if (showDetails) s.progressEl.before(el);
+          else el.remove();
+        }
       }
 
       // Parts: the one happening now is highlighted, with the time it has left.
       for (const part of s.parts) {
-        if (part.detailsEl && showDetails !== part.detailsEl.isConnected) {
-          if (showDetails) part.el.append(part.detailsEl);
-          else part.detailsEl.remove();
-        }
         const isNow = t >= part.startMs && t < part.endMs;
         part.el.classList.toggle("is-done", t >= part.endMs);
         part.el.classList.toggle("is-now", isNow);

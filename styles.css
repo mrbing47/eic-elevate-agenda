@@ -943,8 +943,9 @@ a {
 }
 
 /* Parts of a session (e.g. the hackathon's plan): start time, what happens
-   and for how long, lined up in columns. app.js marks the parts already done
-   and the one happening now, which shows the time it has left. */
+   and for how long, lined up in columns. app.js adds the list once the
+   session starts, and marks the parts already done and the one happening now,
+   which shows the time it has left. */
 .parts {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;

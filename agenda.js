@@ -19,14 +19,14 @@
  *                   people: [{ name: "...", role: "...", photo: "assets/people/....jpg" }]
  *                 role and photo are optional. Use a square photo with the
  *                 face in the middle: it's shown as a small circle.
- *               parts          -> a plan within the session, shown on the card
- *                                 all day, with the part happening now
- *                                 highlighted and counting down:
+ *               parts          -> a plan within the session, which appears
+ *                                 when the session starts (like details) and
+ *                                 stays after it ends, with the part
+ *                                 happening now highlighted and counting down:
  *                   parts: [{ minutes: 10, title: "..." }, { minutes: 40, title: "..." }]
  *                 Parts run back to back from the session's start; any time
  *                 left at the end is free (e.g. a buffer). A part can have its
- *                 own details (same format as below), shown under it from
- *                 when the session starts.
+ *                 own details (same format as below), shown under it.
  *               details        -> appears when the session starts and stays
  *                                 after it ends, e.g. for slides:
  *                   details: { links: [{ label: "Slides", url: "https://..." }] }
@@ -38,13 +38,14 @@
  *                 same link, shown in the box on screens bigger than a phone.
  *                 In one session, give all links a heading and QR code or
  *                 none, so they line up as matching boxes.
- *                 It's only hidden on the page: anyone can read this file (or
- *                 add ?details=all to the address), so keep secrets out of it.
+ *                 It's only hidden on the page (parts too): anyone can read
+ *                 this file (or add ?details=all to the address), so keep
+ *                 secrets out of it.
  *
  * Preview the page at any moment by adding ?now=HH:MM (or
  * ?now=YYYY-MM-DDTHH:MM) to the URL, e.g. index.html?now=10:45
  * Add &speed=60 to run the clock 60x faster, and ?details=all to show every
- * session's details straight away (e.g. to get the page reviewed).
+ * session's parts and details straight away (e.g. to get the page reviewed).
  */
 window.EVENT_AGENDA = {
   title: "ANZ EIC Elevate",
