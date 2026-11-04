@@ -157,36 +157,66 @@
     }
   }
 
-  // Optional details shown once a session starts:
-  // { text, links: [{ label, url, heading, qr }], steps: ["...", "..."] }.
-  // heading puts the link in its own box under that title; qr adds an image of
-  // a QR code for the link (e.g. "assets/qr/app.svg") to that box.
-  function readDetails(raw, i) {
+  // Optional details shown once a session starts (on the session, or on one of
+  // its parts): { text, keywords: ["...", "..."], links: [{ label, url, heading, qr }], steps: ["...", "..."] }.
+  // keywords show as a row of tags under the text; heading puts a link in its
+  // own box under that title; qr adds an image of a QR code for the link
+  // (e.g. "assets/qr/app.svg") to that box. `where` names the place in
+  // agenda.js for warnings, e.g. "session #3".
+  function readDetails(raw, where) {
     if (raw == null) return null;
     const text = typeof raw.text === "string" ? raw.text.trim() : "";
+    const keywords = [];
+    for (const keyword of [].concat(raw.keywords ?? [])) {
+      const value = typeof keyword === "string" ? keyword.trim() : "";
+      if (value) keywords.push(value);
+      else console.warn(`[agenda] Skipping a keyword in ${where}: each keyword is a word or phrase in quotes.`, keyword);
+    }
     const links = [];
     for (const link of [].concat(raw.links ?? [])) {
       const label = String(link?.label ?? "").trim();
       const href = safeHref(link?.url);
       if (!label || !href) {
-        console.warn(`[agenda] Skipping a link in session #${i + 1}: it needs a label and a web address.`, link);
+        console.warn(`[agenda] Skipping a link in ${where}: it needs a label and a web address.`, link);
         continue;
       }
       const heading = typeof link.heading === "string" ? link.heading.trim() : "";
-      if (link.heading != null && !heading) console.warn(`[agenda] Ignoring the heading for "${label}" in session #${i + 1}: it needs some text.`, link.heading);
+      if (link.heading != null && !heading) console.warn(`[agenda] Ignoring the heading for "${label}" in ${where}: it needs some text.`, link.heading);
       const qr = link.qr == null ? null : safeHref(link.qr);
-      if (link.qr != null && !qr) console.warn(`[agenda] Ignoring the QR code for "${label}" in session #${i + 1}: give it an image path.`, link.qr);
+      if (link.qr != null && !qr) console.warn(`[agenda] Ignoring the QR code for "${label}" in ${where}: give it an image path.`, link.qr);
       links.push({ label, href, heading, qr });
     }
     const steps = [];
     for (const step of [].concat(raw.steps ?? [])) {
       const value = typeof step === "string" ? step.trim() : "";
       if (value) steps.push(value);
-      else console.warn(`[agenda] Skipping a step in session #${i + 1}: each step is a line of text.`, step);
+      else console.warn(`[agenda] Skipping a step in ${where}: each step is a line of text.`, step);
     }
-    if (text || links.length || steps.length) return { text, links, steps };
-    console.warn(`[agenda] Ignoring details for session #${i + 1}: give it text, links and/or steps.`, raw);
+    if (text || keywords.length || links.length || steps.length) return { text, keywords, links, steps };
+    console.warn(`[agenda] Ignoring details for ${where}: give it text, keywords, links and/or steps.`, raw);
     return null;
+  }
+
+  // Details as an element. A link with a heading or QR code gets its own box:
+  // heading, QR code, then the button, which is the only part you click. With
+  // QR codes and steps, the text and steps are grouped so larger screens can
+  // show them as one column, with the boxes beside it (see styles.css).
+  function detailsBlock(details) {
+    const text = details.text && h("p", { class: "details-text", text: details.text });
+    const keywords = details.keywords.length > 0 && h("ul", { class: "details-keywords" },
+      details.keywords.map((keyword) => h("li", { text: keyword })));
+    const links = details.links.length > 0 && h("ul", { class: "details-links" },
+      details.links.map(({ label, href, heading, qr }) => h("li", { class: heading || qr ? "details-box" : null },
+        heading && h("p", { class: "details-box-heading", text: heading }),
+        qr && h("img", { class: "details-qr", src: qr, alt: "" }),
+        h("a", { class: "details-link", href, target: "_blank", rel: "noopener" },
+          label, h("span", { class: "visually-hidden", text: " (opens in a new tab)" })))));
+    const steps = details.steps.length > 0 && h("ol", { class: "details-steps" },
+      details.steps.map((step) => h("li", { text: step })));
+    if (steps && details.links.some((link) => link.qr)) {
+      return h("div", { class: "details details-split" }, h("div", { class: "details-main" }, text, keywords, steps), links);
+    }
+    return h("div", { class: "details" }, text, keywords, links, steps);
   }
 
   // Optional people, e.g. a session's speakers or the event's hosts:
@@ -220,6 +250,31 @@
           role && h("span", { class: "person-role", text: role })))));
   }
 
+  // Optional parts of a session (e.g. the hackathon's plan): [{ minutes, title, details }].
+  // They run back to back from the session's start; any time left at the end
+  // is free (e.g. a buffer). Parts that would run past the end are left out.
+  // A part's details work like a session's, shown under the part.
+  function readParts(raw, startMs, endMs, i) {
+    const parts = [];
+    let at = startMs;
+    for (const part of [].concat(raw ?? [])) {
+      const title = typeof part?.title === "string" ? part.title.trim() : "";
+      const minutes = Number(part?.minutes);
+      if (!title || !Number.isFinite(minutes) || minutes <= 0) {
+        console.warn(`[agenda] Skipping a part of session #${i + 1}: it needs a title and a number of minutes.`, part);
+        continue;
+      }
+      const partEnd = at + minutes * MINUTE;
+      if (partEnd > endMs) {
+        console.warn(`[agenda] Leaving out the parts of session #${i + 1} from "${title}" on: they would run past the session's end.`);
+        break;
+      }
+      parts.push({ title, startMs: at, endMs: partEnd, details: readDetails(part.details, `part "${title}" of session #${i + 1}`) });
+      at = partEnd;
+    }
+    return parts;
+  }
+
   const sessions = config.sessions
     .map((s, i) => {
       const start = TIME_RE.exec(String(s?.start ?? "").trim());
@@ -231,7 +286,12 @@
       const startMs = instant(Y, M, D, +start[1], +start[2]);
       let endMs = instant(Y, M, D, +end[1], +end[2]);
       if (endMs < startMs) endMs = instant(Y, M, D + 1, +end[1], +end[2]); // runs past midnight
-      return { ...s, startMs, endMs, details: readDetails(s.details, i), people: readPeople(s.people, `session #${i + 1}`) };
+      return {
+        ...s, startMs, endMs,
+        details: readDetails(s.details, `session #${i + 1}`),
+        people: readPeople(s.people, `session #${i + 1}`),
+        parts: readParts(s.parts, startMs, endMs, i),
+      };
     })
     .filter(Boolean)
     .sort((a, b) => a.startMs - b.startMs || a.endMs - b.endMs);
@@ -329,21 +389,21 @@
       h("div", { class: "progress-track" }, s.barEl),
       h("div", { class: "progress-text" }, s.elapsedEl, s.leftEl));
 
-    // Built now, but only added to the card once the session starts (see tick).
-    // A link with a heading or QR code gets its own box: heading, QR code, then
-    // the button, which is the only part you click. With QR codes, larger
-    // screens show the boxes beside the steps (see styles.css).
-    const hasQr = s.details?.links.some((link) => link.qr);
-    s.detailsEl = s.details && h("div", { class: hasQr && s.details.steps.length > 0 ? "details details-split" : "details" },
-      s.details.text && h("p", { class: "details-text", text: s.details.text }),
-      s.details.links.length > 0 && h("ul", { class: "details-links" },
-        s.details.links.map(({ label, href, heading, qr }) => h("li", { class: heading || qr ? "details-box" : null },
-          heading && h("p", { class: "details-box-heading", text: heading }),
-          qr && h("img", { class: "details-qr", src: qr, alt: "" }),
-          h("a", { class: "details-link", href, target: "_blank", rel: "noopener" },
-            label, h("span", { class: "visually-hidden", text: " (opens in a new tab)" }))))),
-      s.details.steps.length > 0 && h("ol", { class: "details-steps" },
-        s.details.steps.map((step) => h("li", { text: step }))));
+    // Details are built now, but only added to the card (or to their part)
+    // once the session starts (see tick).
+    s.detailsEl = s.details && detailsBlock(s.details);
+
+    // Parts (e.g. the hackathon's plan): start time, what happens and for how
+    // long. The live update marks the part happening now and counts it down.
+    for (const part of s.parts) {
+      part.length = formatDuration(part.endMs - part.startMs);
+      part.lengthEl = h("span", { class: "part-length", text: part.length });
+      part.el = h("li", { class: "part" },
+        timeEl(part.startMs, "part-start"),
+        h("span", { class: "part-title", text: part.title }),
+        part.lengthEl);
+      part.detailsEl = part.details && detailsBlock(part.details);
+    }
 
     s.el = h("li", { class: isBreak ? "item is-break" : "item", id: s.id },
       h("div", { class: "item-time" }, timeEl(s.startMs, "item-start")),
@@ -358,6 +418,7 @@
           s.speaker && h("p", { class: "speaker", text: s.speaker }),
           s.description && h("p", { class: "desc", text: s.description }),
           s.people.length > 0 && peopleList(s.people),
+          s.parts.length > 0 && h("ol", { class: "parts" }, s.parts.map((part) => part.el)),
           s.progressEl)));
 
     s.el.style.setProperty("--c1", brandAt(i / count));
@@ -643,12 +704,26 @@
       s.el.classList.toggle("rail-done", t >= s.segmentEndMs);
       if (hasPointer) setText(s.chipEl, fmt.time.format(t));
 
-      // Details (e.g. slides) join the card when the session starts and stay
-      // afterwards; with ?details=all they're there from the start.
+      // Details (e.g. slides) join the card, and its parts, when the session
+      // starts and stay afterwards; with ?details=all they're there from the start.
       const showDetails = showAllDetails || t >= s.startMs;
       if (s.detailsEl && showDetails !== s.detailsEl.isConnected) {
         if (showDetails) s.progressEl.before(s.detailsEl);
         else s.detailsEl.remove();
+      }
+
+      // Parts: the one happening now is highlighted, with the time it has left.
+      for (const part of s.parts) {
+        if (part.detailsEl && showDetails !== part.detailsEl.isConnected) {
+          if (showDetails) part.el.append(part.detailsEl);
+          else part.detailsEl.remove();
+        }
+        const isNow = t >= part.startMs && t < part.endMs;
+        part.el.classList.toggle("is-done", t >= part.endMs);
+        part.el.classList.toggle("is-now", isNow);
+        if (isNow) part.el.setAttribute("aria-current", "time");
+        else part.el.removeAttribute("aria-current");
+        setText(part.lengthEl, isNow ? `${formatDuration(part.endMs - t, Math.ceil)} left` : part.length);
       }
 
       if (isLive) {

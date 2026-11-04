@@ -19,10 +19,19 @@
  *                   people: [{ name: "...", role: "...", photo: "assets/people/....jpg" }]
  *                 role and photo are optional. Use a square photo with the
  *                 face in the middle: it's shown as a small circle.
+ *               parts          -> a plan within the session, shown on the card
+ *                                 all day, with the part happening now
+ *                                 highlighted and counting down:
+ *                   parts: [{ minutes: 10, title: "..." }, { minutes: 40, title: "..." }]
+ *                 Parts run back to back from the session's start; any time
+ *                 left at the end is free (e.g. a buffer). A part can have its
+ *                 own details (same format as below), shown under it from
+ *                 when the session starts.
  *               details        -> appears when the session starts and stays
  *                                 after it ends, e.g. for slides:
  *                   details: { links: [{ label: "Slides", url: "https://..." }] }
- *                 Add text: "..." for a line of text, or steps: ["...", "..."]
+ *                 Add text: "..." for a line of text, keywords: ["...", "..."]
+ *                 for a row of keyword tags under it, or steps: ["...", "..."]
  *                 for numbered steps (shown below the links). A link can also
  *                 have heading: "..." to show it in its own box under that
  *                 heading, and qr: "assets/qr/....svg", a QR code image of the
@@ -212,16 +221,32 @@ window.EVENT_AGENDA = {
           photo: "assets/people/yvonne-zhang.jpg"
         }
       ],
-      details: {
-        links: [
-          {
-            heading: "Registration",
-            label: "Open form",
-            url: "https://forms.cloud.microsoft/r/ke8f0btuXi",
-            qr: "assets/qr/hackathon-registration.svg"
+      // 80 minutes of parts: the last 10 minutes (3:20–3:30 pm) are a buffer.
+      parts: [
+        {
+          minutes: 10,
+          title: "Form teams",
+          details: {
+            links: [
+              {
+                heading: "Registration",
+                label: "Open form",
+                url: "https://forms.cloud.microsoft/r/ke8f0btuXi",
+                qr: "assets/qr/hackathon-registration.svg"
+              }
+            ]
           }
-        ]
-      }
+        },
+        {
+          minutes: 40,
+          title: "Choose keywords, define a use case + hack",
+          details: {
+            keywords: ["67", "Time Travel", "Penguin", "Taco", "Tea", "Level Up", "Frontier", "Side Quest", "Glitch", "Multiverse"]
+          }
+        },
+        { minutes: 20, title: "Showcase: 10 teams × 2 minutes" },
+        { minutes: 10, title: "Voting + Prizes" }
+      ]
     },
     {
       start: "15:30", end: "16:00",
