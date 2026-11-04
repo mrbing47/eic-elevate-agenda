@@ -205,7 +205,7 @@ window.EVENT_AGENDA = {
     },
     {
       start: "13:00", end: "14:00",
-      title: "Reach Workshop"
+      title: "REACH Workshop"
     },
     {
       start: "14:00", end: "15:30",
