@@ -5,6 +5,8 @@
  *
  *   theme     Optional line shown in the header under the logo. Wrap words
  *             in *asterisks* to give them the brand highlight.
+ *   hosts     Optional hosts of the day, shown above the timeline as photos
+ *             with names and roles (same format as people below).
  *   date      Event day as "YYYY-MM-DD".
  *   timeZone  IANA time zone the session times are written in, e.g.
  *             "Australia/Sydney", "Australia/Melbourne", "Pacific/Auckland".
@@ -12,6 +14,11 @@
  *   sessions  start / end use 24-hour "HH:MM". Optional fields:
  *               speaker, location, description,
  *               type: "break"  -> renders as a lighter card,
+ *               people         -> photos with names and roles, e.g. speakers,
+ *                                 shown on the card all day:
+ *                   people: [{ name: "...", role: "...", photo: "assets/people/....jpg" }]
+ *                 role and photo are optional. Use a square photo with the
+ *                 face in the middle: it's shown as a small circle.
  *               details        -> appears when the session starts and stays
  *                                 after it ends, e.g. for slides:
  *                   details: { links: [{ label: "Slides", url: "https://..." }] }
@@ -33,6 +40,18 @@
 window.EVENT_AGENDA = {
   title: "ANZ EIC Elevate",
   theme: "Growing your career in the *frontier generation*",
+  hosts: [
+    {
+      name: "Neth Botheju",
+      role: "Software Engineer",
+      photo: "assets/people/neth-botheju.jpg"
+    },
+    {
+      name: "Ryan Saena",
+      role: "Cloud Solution Architect",
+      photo: "assets/people/ryan-saena.jpg"
+    }
+  ],
   date: "2026-11-06",
   timeZone: "Australia/Sydney",
   locale: "en-AU",
@@ -52,8 +71,19 @@ window.EVENT_AGENDA = {
     },
     {
       start: "09:00", end: "09:15",
-      title: "EIC Exec Sponsor Intro",
-      speaker: "Erika + Adam"
+      title: "EIC Exec Sponsor Introduction",
+      people: [
+        {
+          name: "Erika Harris",
+          role: "Sr. Principal Software Engineering Manager",
+          photo: "assets/people/erika-harris.jpg"
+        },
+        {
+          name: "Adam Richings",
+          role: "MD of SPT",
+          photo: "assets/people/adam-richings.jpg"
+        }
+      ]
     },
     {
       start: "09:15", end: "09:30",
@@ -63,7 +93,13 @@ window.EVENT_AGENDA = {
     {
       start: "09:30", end: "09:50",
       title: "Keynote",
-      speaker: "Charles Gray"
+      people: [
+        {
+          name: "Charles Gray",
+          role: "Partner Software Engineer",
+          photo: "assets/people/charles-gray.jpg"
+        }
+      ]
     },
     {
       start: "09:50", end: "10:10",
@@ -73,11 +109,30 @@ window.EVENT_AGENDA = {
     {
       start: "10:10", end: "11:00",
       title: "Anthropic",
-      description: "Talk + Q&A"
+      description: "Talk + Q&A",
+      people: [
+        {
+          name: "Maddy O’Brien",
+          role: "GTM @ Anthropic",
+          photo: "assets/people/maddy-obrien.jpg"
+        }
+      ]
     },
     {
       start: "11:00", end: "11:15",
       title: "Mini activity - NFC LinkedIn card reader",
+      people: [
+        {
+          name: "Jamie Loke",
+          role: "Solution Engineer",
+          photo: "assets/people/jamie-loke.jpg"
+        },
+        {
+          name: "Sarthik Garg",
+          role: "Software Engineer",
+          photo: "assets/people/sarthik-garg.jpg"
+        }
+      ],
       details: {
         text: "Download NFC Tools",
         links: [
@@ -109,11 +164,33 @@ window.EVENT_AGENDA = {
     {
       start: "11:15", end: "12:00",
       title: "EIC Alumni fireside chat session",
-      description: "Panel (mix of EIC alumni & EIC manager), Q&A"
+      description: "Q&A",
+      people: [
+        {
+          name: "Deborah Burnett",
+          role: "Customer Success Account Manager",
+          photo: "assets/people/deborah-burnett.jpg"
+        },
+        {
+          name: "Alan Huynh",
+          role: "Account Technology Strategist – Private Health",
+          photo: "assets/people/alan-huynh.jpg"
+        },
+        {
+          name: "Sharon Lyu",
+          role: "Senior Software Engineer",
+          photo: "assets/people/sharon-lyu.jpg"
+        },
+        {
+          name: "Susan Shi",
+          role: "Senior Software Engineering Manager",
+          photo: "assets/people/susan-shi.jpg"
+        }
+      ]
     },
     {
       start: "12:00", end: "13:00",
-      title: "Lunch",
+      title: "Lunch & Group Photo",
       type: "break"
     },
     {
@@ -123,6 +200,18 @@ window.EVENT_AGENDA = {
     {
       start: "14:00", end: "15:30",
       title: "Hackathon",
+      people: [
+        {
+          name: "Sarthik Garg",
+          role: "Software Engineer",
+          photo: "assets/people/sarthik-garg.jpg"
+        },
+        {
+          name: "Yvonne Zhang",
+          role: "Technical Program Manager",
+          photo: "assets/people/yvonne-zhang.jpg"
+        }
+      ],
       details: {
         links: [
           {

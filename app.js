@@ -189,6 +189,37 @@
     return null;
   }
 
+  // Optional people, e.g. a session's speakers or the event's hosts:
+  // [{ name, role, photo }]. Only the name is required. `where` names the
+  // place in agenda.js for warnings, e.g. "session #3".
+  function readPeople(raw, where) {
+    const people = [];
+    for (const person of [].concat(raw ?? [])) {
+      const name = typeof person?.name === "string" ? person.name.trim() : "";
+      if (!name) {
+        console.warn(`[agenda] Skipping a person in ${where}: they need a name.`, person);
+        continue;
+      }
+      const role = typeof person.role === "string" ? person.role.trim() : "";
+      if (person.role != null && !role) console.warn(`[agenda] Ignoring the role for "${name}" in ${where}: it needs some text.`, person.role);
+      const photo = person.photo == null ? null : safeHref(person.photo);
+      if (person.photo != null && !photo) console.warn(`[agenda] Ignoring the photo for "${name}" in ${where}: give it an image path.`, person.photo);
+      people.push({ name, role, photo });
+    }
+    return people;
+  }
+
+  // A list of people: round photo, then name and role. The name is right
+  // beside each photo, so the photo itself needs no alt text.
+  function peopleList(people) {
+    return h("ul", { class: "people" },
+      people.map(({ name, role, photo }) => h("li", { class: "person" },
+        photo && h("img", { class: "person-photo", src: photo, alt: "" }),
+        h("span", { class: "person-text" },
+          h("span", { class: "person-name", text: name }),
+          role && h("span", { class: "person-role", text: role })))));
+  }
+
   const sessions = config.sessions
     .map((s, i) => {
       const start = TIME_RE.exec(String(s?.start ?? "").trim());
@@ -200,7 +231,7 @@
       const startMs = instant(Y, M, D, +start[1], +start[2]);
       let endMs = instant(Y, M, D, +end[1], +end[2]);
       if (endMs < startMs) endMs = instant(Y, M, D + 1, +end[1], +end[2]); // runs past midnight
-      return { ...s, startMs, endMs, details: readDetails(s.details, i) };
+      return { ...s, startMs, endMs, details: readDetails(s.details, i), people: readPeople(s.people, `session #${i + 1}`) };
     })
     .filter(Boolean)
     .sort((a, b) => a.startMs - b.startMs || a.endMs - b.endMs);
@@ -326,6 +357,7 @@
           h("h2", { class: "title", text: s.title }),
           s.speaker && h("p", { class: "speaker", text: s.speaker }),
           s.description && h("p", { class: "desc", text: s.description }),
+          s.people.length > 0 && peopleList(s.people),
           s.progressEl)));
 
     s.el.style.setProperty("--c1", brandAt(i / count));
@@ -363,6 +395,22 @@
     themeEl.replaceChildren(...theme.split(/\*([^*]+)\*/)
       .map((part, i) => (i % 2 ? h("span", { class: "theme-accent", text: part }) : part)));
     themeEl.hidden = false;
+  }
+
+  // The event's hosts, above the timeline all day
+  const hosts = readPeople(config.hosts, "hosts");
+  if (hosts.length) {
+    const hostsEl = $("event-hosts");
+    hostsEl.append(peopleList(hosts));
+    hostsEl.hidden = false;
+    // Line the hosts up with the first session time below them. The times are
+    // right-aligned, so where they start depends on the text: measure it, and
+    // again whenever its size changes (fonts loading, screen size).
+    const firstTime = timelineEl.querySelector(".item-start");
+    new ResizeObserver(() => {
+      const inset = firstTime.getBoundingClientRect().left - timelineEl.getBoundingClientRect().left;
+      hostsEl.style.setProperty("--time-inset", `${inset}px`);
+    }).observe(firstTime);
   }
   setText($("clock-label"), city ? `${city} time · ${zoneAt(now())}` : "Local time");
   setText($("footer-note"), `All times are ${city ? `${city} time` : "local time"}${eventZone ? ` (${eventZone})` : ""}.`);
@@ -463,13 +511,15 @@
     }
   }
 
+  // The top bar shows its own clock only once the big one has scrolled
+  // completely out of view, so the time is never on screen twice. (The bar
+  // sits below the header until the header has gone, so it never covers it.)
   new IntersectionObserver(
     (entries) => {
       const entry = entries[entries.length - 1];
       statusEl.classList.toggle("show-clock", !entry.isIntersecting);
       fitStatus();
     },
-    { rootMargin: "-80px 0px 0px 0px" },
   ).observe(clockEl);
 
   // ---------------------------------------------------------------------------

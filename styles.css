@@ -124,7 +124,7 @@ a {
    Header
    -------------------------------------------------------------------------- */
 .hero {
-  padding: clamp(1.5rem, 4vw, 3rem) 0 clamp(1.25rem, 3vw, 2.25rem);
+  padding: clamp(1.5rem, 4vw, 3rem) 0 clamp(1.25rem, 3vw, 1.5rem);
 }
 
 /* Narrow: stacked. The logo, the theme directly under it, then the date and
@@ -534,6 +534,54 @@ a {
 }
 
 /* -----------------------------------------------------------------------------
+   Hosts: between the header and the timeline, shown all day, laid out like
+   the people on session cards
+   -------------------------------------------------------------------------- */
+.hosts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem 1.5rem;
+  margin-top: clamp(1.75rem, 4vw, 2.75rem);
+  padding-left: var(--time-inset, 0px); /* in line with the session times (set by app.js) */
+}
+
+.hosts[hidden] {
+  display: none;
+}
+
+/* Same style as the timeline's "End of day" label */
+.hosts-label {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.hosts .people {
+  row-gap: 1.5rem; /* as on a live card: the photos are the same size */
+  margin: 0;
+}
+
+/* Bigger than on session cards, like the speakers on a live card */
+.hosts .person-photo {
+  width: 4.5rem;
+  height: 4.5rem;
+}
+
+.hosts .person-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.hosts .person-role {
+  font-size: 0.92rem;
+}
+
+/* -----------------------------------------------------------------------------
    Timeline
    -------------------------------------------------------------------------- */
 .timeline {
@@ -831,6 +879,67 @@ a {
   color: var(--muted);
 }
 
+/* People on a session, e.g. speakers: a round photo beside each name and role,
+   with room above and below to set them apart from the title and links */
+.people {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem 1.75rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.people + .details {
+  margin-top: 1.25rem;
+}
+
+.person {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-width: 0;
+}
+
+.person-photo {
+  flex: none;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--tint);
+}
+
+.person-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.person-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.person-role {
+  font-size: 0.85rem;
+  line-height: 1.3;
+  color: var(--muted);
+}
+
+/* Three or more people (e.g. a panel) line up in one column, or in two
+   columns on wide screens, instead of wrapping into a ragged mix */
+.people:has(> :nth-child(3)) {
+  display: grid;
+}
+
+@media (min-width: 64rem) {
+  .people:has(> :nth-child(3)) {
+    grid-template-columns: repeat(2, minmax(0, max-content));
+  }
+}
+
 /* Details (e.g. slides or steps): app.js adds these once the session starts */
 .details {
   display: grid;
@@ -1048,7 +1157,8 @@ a {
 }
 
 .is-past .speaker,
-.is-past .desc {
+.is-past .desc,
+.is-past .person-name {
   color: var(--muted);
 }
 
@@ -1089,6 +1199,33 @@ a {
   margin-top: 0.5rem;
   font-size: clamp(1rem, 0.95rem + 0.25vw, 1.15rem);
   color: var(--text-soft);
+}
+
+.is-live .people {
+  gap: 1.5rem 2.5rem;
+  margin-top: 1.25rem;
+}
+
+.is-live .people + .details {
+  margin-top: 1.5rem;
+}
+
+.is-live .person {
+  gap: 0.9rem;
+}
+
+.is-live .person-photo {
+  width: 4.5rem;
+  height: 4.5rem;
+}
+
+.is-live .person-name {
+  font-size: clamp(1.05rem, 1rem + 0.3vw, 1.25rem);
+  font-weight: 700;
+}
+
+.is-live .person-role {
+  font-size: clamp(0.92rem, 0.9rem + 0.15vw, 1rem);
 }
 
 .is-live .progress {
@@ -1222,6 +1359,11 @@ a {
     flex-basis: 10rem;
   }
 
+  /* Hosts a little closer together, so they still fit side by side */
+  .hosts .people {
+    column-gap: 1.25rem;
+  }
+
   .item-start {
     font-size: 0.95rem;
   }
@@ -1234,6 +1376,11 @@ a {
     padding-inline: 1.1rem;
   }
 
+  .is-live .person-photo {
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+
   .now-chip {
     padding: 0.25rem 0.45rem;
     font-size: 0.66rem;
@@ -1241,6 +1388,17 @@ a {
 
   .status-title {
     font-size: 0.95rem;
+  }
+}
+
+/* Phones: names and roles go under the photo rather than being squeezed
+   into a thin column beside it (long job titles would wrap to 3–4 lines) */
+@media (max-width: 30rem) {
+  .person,
+  .is-live .person {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
   }
 }
 

@@ -19,11 +19,13 @@ Everything lives in [`agenda.js`](agenda.js):
 | Field | Example | Notes |
 | --- | --- | --- |
 | `theme` | `"Growing your career in the *frontier generation*"` | Optional line under the logo. Words in `*asterisks*` get the brand highlight |
+| `hosts` | `[{ name: "…", role: "…", photo: "assets/people/….jpg" }]` | Optional hosts of the day, shown above the timeline in the same format as `sessions[].people` |
 | `date` | `"2026-11-06"` | Event day |
 | `timeZone` | `"Australia/Sydney"` | Time zone the session times are written in |
 | `sessions[].start` / `end` | `"13:30"` | 24-hour time |
 | `sessions[].speaker`, `location`, `description` | | Optional |
 | `sessions[].type` | `"break"` | Optional, gives a lighter card |
+| `sessions[].people` | `[{ name: "…", role: "…", photo: "assets/people/….jpg" }]` | Optional people on the card, e.g. speakers, shown all day as a round photo beside each name and role. `role` and `photo` are optional; use a square photo with the face in the middle |
 | `sessions[].details` | `{ links: [{ label: "Slides", url: "https://…" }] }` | Optional. Appears when the session starts and stays afterwards. Can also have `text`, and `steps: ["…", "…"]` for numbered steps below the links. A link can have `heading: "…"` to show it in its own box under that heading, and `qr: "assets/qr/….svg"`, a QR code image of the same link that shows in the box on screens bigger than a phone |
 
 `details` is only hidden on the page. Anyone who opens `agenda.js` (or this repository), or adds `?details=all` to the page address, can see it early, so if slides must stay private until the session, add the link (or share the file) when the session starts.
