@@ -219,12 +219,6 @@ window.EVENT_AGENDA = {
             label: "Open form",
             url: "https://forms.cloud.microsoft/r/ke8f0btuXi",
             qr: "assets/qr/hackathon-registration.svg"
-          },
-          {
-            heading: "Slides",
-            label: "Open slides",
-            url: "https://microsoftapc-my.sharepoint.com/:p:/g/personal/yvonnezhang_microsoft_com/cQrJukiQw7QURpSJQtltkWZZEgUC6FijNwFWVIlJgctUmNaRtQ",
-            qr: "assets/qr/hackathon-slides.svg"
           }
         ]
       }
