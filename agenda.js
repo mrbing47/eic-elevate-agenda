@@ -63,8 +63,7 @@ window.EVENT_AGENDA = {
     {
       start: "09:30", end: "09:50",
       title: "Keynote",
-      speaker: "Charles Gray",
-      description: "Theme: EIC focus"
+      speaker: "Charles Gray"
     },
     {
       start: "09:50", end: "10:10",
