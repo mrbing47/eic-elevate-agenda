@@ -71,17 +71,17 @@ window.EVENT_AGENDA = {
     {
       start: "08:30", end: "08:50",
       title: "Registration",
-      description: "Name tags and goodie bags",
+      description: "Collect your name tag and welcome pack",
       type: "break"
     },
     {
       start: "08:50", end: "09:00",
-      title: "MC",
-      description: "Housekeeping"
+      title: "Welcome & Housekeeping",
+      description: "Opening remarks from your hosts"
     },
     {
       start: "09:00", end: "09:15",
-      title: "EIC Exec Sponsor Introduction",
+      title: "EIC Executive Sponsor Introduction",
       people: [
         {
           name: "Erika Harris",
@@ -97,8 +97,8 @@ window.EVENT_AGENDA = {
     },
     {
       start: "09:15", end: "09:30",
-      title: "Kick off + Icebreaker",
-      description: "Icebreaker activity"
+      title: "Kick-Off & Icebreaker",
+      description: "Get to know your fellow attendees"
     },
     {
       start: "09:30", end: "09:50",
@@ -118,8 +118,8 @@ window.EVENT_AGENDA = {
     },
     {
       start: "10:10", end: "11:00",
-      title: "Anthropic",
-      description: "Talk + Q&A",
+      title: "Guest Session: Anthropic",
+      description: "Talk followed by Q&A",
       people: [
         {
           name: "Maddy O’Brien",
@@ -130,7 +130,7 @@ window.EVENT_AGENDA = {
     },
     {
       start: "11:00", end: "11:15",
-      title: "Mini activity - NFC LinkedIn card reader",
+      title: "Mini Activity: NFC LinkedIn Card Reader",
       people: [
         {
           name: "Jamie Loke",
@@ -144,7 +144,7 @@ window.EVENT_AGENDA = {
         }
       ],
       details: {
-        text: "Download NFC Tools",
+        text: "Download the NFC Tools app",
         links: [
           {
             heading: "iPhone",
@@ -161,20 +161,20 @@ window.EVENT_AGENDA = {
         ],
         steps: [
           "Open NFC Tools",
-          "Click on Write",
+          "Tap Write",
           "Add a record",
-          "Find “Social Network”",
-          "Click on Edit",
-          "Find LinkedIn or GitHub",
+          "Select “Social Network”",
+          "Tap Edit",
+          "Select LinkedIn or GitHub",
           "Enter your username or profile URL, then press Enter",
-          "Click on Write and scan your NFC tag"
+          "Tap Write, then scan your NFC tag"
         ]
       }
     },
     {
       start: "11:15", end: "12:00",
-      title: "EIC Alumni fireside chat session",
-      description: "Q&A",
+      title: "EIC Alumni Fireside Chat",
+      description: "Discussion followed by Q&A",
       people: [
         {
           name: "Deborah Burnett",
@@ -205,7 +205,7 @@ window.EVENT_AGENDA = {
     },
     {
       start: "13:00", end: "14:00",
-      title: "Reach workshop"
+      title: "Reach Workshop"
     },
     {
       start: "14:00", end: "15:30",
@@ -226,7 +226,7 @@ window.EVENT_AGENDA = {
       parts: [
         {
           minutes: 10,
-          title: "Form teams",
+          title: "Form Teams",
           details: {
             links: [
               {
@@ -240,18 +240,18 @@ window.EVENT_AGENDA = {
         },
         {
           minutes: 40,
-          title: "Choose keywords, define a use case + hack",
+          title: "Choose Keywords, Define a Use Case & Hack",
           details: {
             keywords: ["67", "Time Travel", "Penguin", "Taco", "Tea", "Level Up", "Frontier", "Side Quest", "Glitch", "Multiverse"]
           }
         },
-        { minutes: 20, title: "Showcase: 10 teams × 2 minutes" },
-        { minutes: 10, title: "Voting + Prizes" }
+        { minutes: 20, title: "Showcase: 10 Teams × 2 Minutes" },
+        { minutes: 10, title: "Voting & Prizes" }
       ]
     },
     {
       start: "15:30", end: "16:00",
-      title: "Close + prizes + feedback",
+      title: "Closing Remarks & Feedback",
       details: {
         links: [
           {
