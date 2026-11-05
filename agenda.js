@@ -246,7 +246,20 @@ window.EVENT_AGENDA = {
           }
         },
         { minutes: 20, title: "Showcase: 10 Teams × 2 Minutes" },
-        { minutes: 10, title: "Voting & Prizes" }
+        {
+          minutes: 10,
+          title: "Voting & Prizes",
+          details: {
+            links: [
+              {
+                heading: "Vote",
+                label: "Open form",
+                url: "https://forms.cloud.microsoft/r/PBq8SnNkhS",
+                qr: "assets/qr/hackathon-voting.svg"
+              }
+            ]
+          }
+        }
       ]
     },
     {
