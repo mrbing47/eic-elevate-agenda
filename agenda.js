@@ -242,7 +242,7 @@ window.EVENT_AGENDA = {
           minutes: 40,
           title: "Choose Keywords, Define a Use Case & Hack",
           details: {
-            keywords: ["67", "Time Travel", "Penguin", "Taco", "Tea", "Level Up", "Frontier", "Side Quest", "Glitch", "Multiverse"]
+            keywords: ["404", "Time Travel", "Penguin", "Taco", "Tea", "Level Up", "Frontier", "Side Quest", "Glitch", "Multiverse"]
           }
         },
         { minutes: 20, title: "Showcase: 10 Teams × 2 Minutes" },
